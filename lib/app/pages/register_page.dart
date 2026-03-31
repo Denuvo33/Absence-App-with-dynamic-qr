@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../routes/app_routes.dart';
 
 class RegisterPage extends GetView<AuthController> {
-  const RegisterPage({super.key});
+  RegisterPage({super.key});
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +56,7 @@ class RegisterPage extends GetView<AuthController> {
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Form(
-                  key: controller.registerFormKey,
+                  key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -139,7 +140,7 @@ class RegisterPage extends GetView<AuthController> {
                           child: ElevatedButton(
                             onPressed: controller.isLoading.value
                                 ? null
-                                : controller.register,
+                                : () => controller.register(_formKey),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF6C5CE7),
                               foregroundColor: Colors.white,
@@ -179,7 +180,7 @@ class RegisterPage extends GetView<AuthController> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              controller.isPasswordHidden.value = true;
+                              controller.resetPasswordVisibility();
                               Get.back();
                             },
                             child: const Text(

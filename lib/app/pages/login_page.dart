@@ -4,7 +4,9 @@ import '../controllers/auth_controller.dart';
 import '../routes/app_routes.dart';
 
 class LoginPage extends GetView<AuthController> {
-  const LoginPage({super.key});
+  LoginPage({super.key});
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +57,7 @@ class LoginPage extends GetView<AuthController> {
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Form(
-                  key: controller.loginFormKey,
+                  key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -119,7 +121,7 @@ class LoginPage extends GetView<AuthController> {
                           child: ElevatedButton(
                             onPressed: controller.isLoading.value
                                 ? null
-                                : controller.login,
+                                : () => controller.login(_formKey),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF4A6CF7),
                               foregroundColor: Colors.white,
@@ -159,7 +161,7 @@ class LoginPage extends GetView<AuthController> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              controller.isPasswordHidden.value = true;
+                              controller.resetPasswordVisibility();
                               Get.toNamed(AppRoutes.register);
                             },
                             child: const Text(
