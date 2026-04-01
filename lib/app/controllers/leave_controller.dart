@@ -117,11 +117,7 @@ class LeaveController extends GetxController {
   // Cancel a pending request
   Future<void> cancelRequest(String requestId) async {
     try {
-      await _db
-          .child('leave_requests')
-          .child(_uid)
-          .child(requestId)
-          .remove();
+      await _db.child('leave_requests').child(_uid).child(requestId).remove();
       loadLeaveRequests();
       Get.snackbar(
         'Dihapus',

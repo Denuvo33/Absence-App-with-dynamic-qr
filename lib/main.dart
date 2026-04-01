@@ -47,7 +47,10 @@ class MyApp extends StatelessWidget {
         GetPage(name: AppRoutes.leave, page: () => const LeavePage()),
         GetPage(name: AppRoutes.admin, page: () => const AdminDashboardPage()),
         GetPage(name: AppRoutes.adminUsers, page: () => const AdminUsersPage()),
-        GetPage(name: AppRoutes.adminUserDetail, page: () => const AdminUserDetailPage()),
+        GetPage(
+          name: AppRoutes.adminUserDetail,
+          page: () => const AdminUserDetailPage(),
+        ),
       ],
     );
   }

@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:csv/csv.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import '../controllers/admin_controller.dart';
 
 class AdminUserDetailPage extends StatefulWidget {
@@ -37,6 +42,13 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
         backgroundColor: const Color(0xFF4A6CF7),
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            tooltip: 'Export CSV',
+            onPressed: _exportToCSV,
+          ),
+        ],
       ),
       body: Obx(() {
         if (adminC.isUserDetailLoading.value) {
@@ -432,6 +444,143 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
         );
       }),
     );
+  }
+
+  Future<void> _exportToCSV() async {
+    final user = adminC.selectedUserInfo;
+    if (user.isEmpty) {
+      Get.snackbar('Gagal', 'Data pengguna belum tersedia');
+      return;
+    }
+
+    final stats = adminC.selectedUserStats;
+    final totalHadir = stats['totalHadir'] ?? 0;
+    final totalLate = stats['late'] ?? 0;
+    final totalOnTime = stats['onTime'] ?? 0;
+    final lateMins = stats['totalLateMinutes'] ?? 0;
+    final totalLeaves = stats['totalLeaves'] ?? 0;
+
+    List<List<dynamic>> rows = [];
+
+    // Header Laporan
+    rows.add(['LAPORAN ABSENSI KARYAWAN']);
+    rows.add([]);
+
+    // Profil
+    rows.add(['DATA PROFIL']);
+    rows.add(['Nama', user['name']]);
+    rows.add(['Email', user['email']]);
+    rows.add([]);
+
+    // Rekapitulasi
+    rows.add(['REKAPITULASI']);
+    rows.add(['Total Hadir', totalHadir]);
+    rows.add(['Izin/Cuti', totalLeaves]);
+    rows.add(['Tepat Waktu', totalOnTime]);
+    rows.add(['Terlambat', totalLate]);
+    rows.add(['Total Menit Telat', lateMins]);
+    rows.add([]);
+
+    // Header Riwayat
+    rows.add(['DETAIL RIWAYAT ABSENSI & IZIN']);
+    rows.add([
+      'Tanggal',
+      'Tipe',
+      'Status',
+      'Jam Masuk',
+      'Jam Keluar',
+      'Durasi',
+      'Menit Telat',
+      'Keterangan/Alasan'
+    ]);
+
+    // Data Riwayat
+    final history = adminC.selectedUserHistory;
+    for (var item in history) {
+      final isLeave = item['recordType'] == 'leave';
+      final date = item['date'] as DateTime?;
+      final dateStr = date != null
+          ? DateFormat('yyyy-MM-dd').format(date)
+          : (item['dateKey'] ?? '-');
+
+      if (isLeave) {
+        final type = item['leaveType']?.toString().toUpperCase() ?? 'IZIN';
+        final reason = item['reason'] ?? '-';
+        rows.add([
+          dateStr,
+          'Izin/Cuti',
+          type,
+          '-',
+          '-',
+          '-',
+          '-',
+          reason,
+        ]);
+      } else {
+        final clockInStr = item['clockIn'] != null
+            ? DateFormat('HH:mm').format(item['clockIn'])
+            : '-';
+        final clockOutStr = item['clockOut'] != null
+            ? DateFormat('HH:mm').format(item['clockOut'])
+            : '-';
+        
+        final isLate = item['status'] == 'late';
+        final statusStr = isLate ? 'Terlambat' : 'Tepat Waktu';
+        
+        final duration = item['duration'] ?? '-';
+        final lateMinutesStr = item['lateMinutes']?.toString() ?? '0';
+
+        rows.add([
+          dateStr,
+          'Absensi',
+          statusStr,
+          clockInStr,
+          clockOutStr,
+          duration,
+          lateMinutesStr,
+          '-',
+        ]);
+      }
+    }
+
+    try {
+      String csvData = Csv().encode(rows);
+      
+      final String userName = user['name'].toString().replaceAll(' ', '_');
+      final fileName = 'Rekap_Absensi_$userName';
+
+      Uint8List bytes = Uint8List.fromList(utf8.encode(csvData));
+
+      String savedPath = await FileSaver.instance.saveFile(
+        name: fileName,
+        bytes: bytes,
+        fileExtension: 'csv',
+        mimeType: MimeType.csv,
+      );
+
+      if (savedPath.isNotEmpty) {
+        Get.snackbar(
+          'Berhasil Diunduh',
+          'File tersimpan di: $savedPath',
+          backgroundColor: Colors.green.shade600,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 6),
+          mainButton: TextButton(
+            onPressed: () {
+              Share.shareXFiles(
+                [XFile(savedPath)],
+                text: 'Rekap Absensi $userName',
+              );
+            },
+            child: const Text('BAGIKAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        );
+      } else {
+        Get.snackbar('Informasi', 'Penyimpanan CSV dibatalkan');
+      }
+    } catch (e) {
+      Get.snackbar('Gagal', 'Terjadi kesalahan saat menyimpan data: $e');
+    }
   }
 }
 

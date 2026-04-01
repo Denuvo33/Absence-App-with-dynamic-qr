@@ -82,8 +82,11 @@ class AbsenceController extends GetxController {
       final parts = timeStr.split(':');
       final now = DateTime.now();
       return DateTime(
-        now.year, now.month, now.day,
-        int.parse(parts[0]), int.parse(parts[1]),
+        now.year,
+        now.month,
+        now.day,
+        int.parse(parts[0]),
+        int.parse(parts[1]),
       );
     } catch (_) {
       return null;
