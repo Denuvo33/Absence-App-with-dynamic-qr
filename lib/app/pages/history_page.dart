@@ -28,9 +28,9 @@ class HistoryPage extends StatelessWidget {
           // Month selector
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4A6CF7),
-              borderRadius: const BorderRadius.only(
+            decoration: const BoxDecoration(
+              color: Color(0xFF4A6CF7),
+              borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(24),
                 bottomRight: Radius.circular(24),
               ),
@@ -38,8 +38,7 @@ class HistoryPage extends StatelessWidget {
             child: Obx(() {
               final month = absenceC.selectedMonth.value;
               final label = DateFormat('MMMM yyyy', 'id_ID').format(month);
-              final isCurrentMonth =
-                  month.month == DateTime.now().month &&
+              final isCurrentMonth = month.month == DateTime.now().month &&
                   month.year == DateTime.now().year;
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -84,26 +83,16 @@ class HistoryPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.event_busy,
-                        size: 64,
-                        color: Colors.grey.shade300,
-                      ),
+                      Icon(Icons.event_busy, size: 64, color: Colors.grey.shade300),
                       const SizedBox(height: 16),
                       Text(
                         'Belum ada riwayat absensi',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade500,
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.grey.shade500),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'di bulan ini',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade400,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
                       ),
                     ],
                   ),
@@ -137,19 +126,15 @@ class _HistoryCard extends StatelessWidget {
     final clockOut = item['clockOut'] as DateTime?;
     final duration = item['duration'] as String;
     final isComplete = item['isComplete'] as bool;
+    final lateMinutes = item['lateMinutes'] as int? ?? 0;
+    final status = item['status']?.toString() ?? 'on_time';
 
-    final dayName = date != null
-        ? DateFormat('EEEE', 'id_ID').format(date)
-        : '-';
-    final dateStr = date != null
-        ? DateFormat('d MMM yyyy', 'id_ID').format(date)
-        : '-';
-    final clockInStr = clockIn != null
-        ? DateFormat('HH:mm').format(clockIn)
-        : '--:--';
-    final clockOutStr = clockOut != null
-        ? DateFormat('HH:mm').format(clockOut)
-        : '--:--';
+    final dayName = date != null ? DateFormat('EEEE', 'id_ID').format(date) : '-';
+    final dateStr = date != null ? DateFormat('d MMM yyyy', 'id_ID').format(date) : '-';
+    final clockInStr = clockIn != null ? DateFormat('HH:mm').format(clockIn) : '--:--';
+    final clockOutStr = clockOut != null ? DateFormat('HH:mm').format(clockOut) : '--:--';
+
+    final isLate = status == 'late' && lateMinutes > 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -157,6 +142,9 @@ class _HistoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isLate
+            ? Border.all(color: Colors.red.shade200, width: 1)
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -190,27 +178,57 @@ class _HistoryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: isComplete
-                      ? Colors.green.shade50
-                      : Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  isComplete ? 'Selesai' : 'Belum Selesai',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isComplete
-                        ? Colors.green.shade700
-                        : Colors.orange.shade700,
+              Row(
+                children: [
+                  // Late badge
+                  if (isLate)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.warning_amber_rounded,
+                              size: 14, color: Colors.red.shade600),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Telat ${lateMinutes}m',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  // Status badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isComplete
+                          ? (isLate ? Colors.orange.shade50 : Colors.green.shade50)
+                          : Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isComplete
+                          ? (isLate ? 'Telat' : 'Tepat Waktu')
+                          : 'Belum Selesai',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isComplete
+                            ? (isLate ? Colors.orange.shade700 : Colors.green.shade700)
+                            : Colors.orange.shade700,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -224,7 +242,7 @@ class _HistoryCard extends StatelessWidget {
                 label: 'Masuk',
                 time: clockInStr,
                 icon: Icons.login_rounded,
-                color: const Color(0xFF4A6CF7),
+                color: isLate ? Colors.red.shade600 : const Color(0xFF4A6CF7),
               ),
               const SizedBox(width: 12),
               _TimeChip(

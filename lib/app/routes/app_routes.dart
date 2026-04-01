@@ -3,4 +3,6 @@ class AppRoutes {
   static const register = '/register';
   static const home = '/home';
   static const history = '/history';
+  static const dashboard = '/dashboard';
+  static const leave = '/leave';
 }

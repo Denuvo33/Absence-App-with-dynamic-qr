@@ -10,6 +10,8 @@ import 'app/pages/login_page.dart';
 import 'app/pages/register_page.dart';
 import 'app/pages/home_page.dart';
 import 'app/pages/history_page.dart';
+import 'app/pages/dashboard_page.dart';
+import 'app/pages/leave_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +40,8 @@ class MyApp extends StatelessWidget {
         GetPage(name: AppRoutes.register, page: () => RegisterPage()),
         GetPage(name: AppRoutes.home, page: () => const HomePage()),
         GetPage(name: AppRoutes.history, page: () => const HistoryPage()),
+        GetPage(name: AppRoutes.dashboard, page: () => const DashboardPage()),
+        GetPage(name: AppRoutes.leave, page: () => const LeavePage()),
       ],
     );
   }
