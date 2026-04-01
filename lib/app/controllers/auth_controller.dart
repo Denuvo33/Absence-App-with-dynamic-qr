@@ -15,6 +15,7 @@ class AuthController extends GetxController {
   final isPasswordHidden = true.obs;
   final userName = ''.obs;
   final userEmail = ''.obs;
+  final userRole = ''.obs;
 
   // Flag to prevent auto-navigation during registration
   bool _isRegistering = false;
@@ -26,27 +27,25 @@ class AuthController extends GetxController {
 
   StreamSubscription<User?>? _authSub;
 
+  bool get isAdmin => userRole.value == 'admin';
+
   @override
   void onReady() {
     super.onReady();
     // Check initial auth state once
     if (_auth.currentUser != null) {
-      _loadUserData();
-      Get.offAllNamed(AppRoutes.home);
+      _loadUserDataAndNavigate();
     }
     // Listen for subsequent auth state changes
     _authSub = _auth.authStateChanges().skip(1).listen((user) {
       if (user != null) {
         if (!_isRegistering) {
-          _loadUserData();
-          final absenceC = Get.find<AbsenceController>();
-          absenceC.resetState();
-          absenceC.loadTodayAttendance();
-          Get.offAllNamed(AppRoutes.home);
+          _loadUserDataAndNavigate();
         }
       } else {
         userName.value = '';
         userEmail.value = '';
+        userRole.value = '';
         Get.find<AbsenceController>().resetState();
         Get.offAllNamed(AppRoutes.login);
       }
@@ -55,8 +54,8 @@ class AuthController extends GetxController {
 
   User? get currentUser => _auth.currentUser;
 
-  // Load user data from Realtime Database
-  Future<void> _loadUserData() async {
+  // Load user data and navigate based on role
+  Future<void> _loadUserDataAndNavigate() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
     try {
@@ -65,14 +64,28 @@ class AuthController extends GetxController {
         final data = snapshot.value as Map<dynamic, dynamic>;
         userName.value = data['name'] ?? '';
         userEmail.value = data['email'] ?? '';
+        userRole.value = (data['role'] ?? 'user').toString();
       } else {
-        // Fallback to FirebaseAuth data
         userName.value = _auth.currentUser?.displayName ?? '';
         userEmail.value = _auth.currentUser?.email ?? '';
+        userRole.value = 'user';
       }
     } catch (_) {
       userName.value = _auth.currentUser?.displayName ?? '';
       userEmail.value = _auth.currentUser?.email ?? '';
+      userRole.value = 'user';
+    }
+
+    // Navigate based on role
+    final absenceC = Get.find<AbsenceController>();
+    absenceC.resetState();
+    absenceC.loadSchedule();
+    absenceC.loadTodayAttendance();
+
+    if (userRole.value == 'admin') {
+      Get.offAllNamed(AppRoutes.admin);
+    } else {
+      Get.offAllNamed(AppRoutes.home);
     }
   }
 
@@ -107,21 +120,23 @@ class AuthController extends GetxController {
       await credential.user?.updateDisplayName(name);
       await credential.user?.reload();
 
-      // Save user data to Realtime Database
+      // Save user data to Realtime Database WITH role
       await _db.child('users').child(credential.user!.uid).set({
         'name': name,
         'email': email,
+        'role': 'user',
         'createdAt': ServerValue.timestamp,
       });
 
       // Set reactive user data directly
       userName.value = name;
       userEmail.value = email;
+      userRole.value = 'user';
 
       _clearFields();
       _isRegistering = false;
 
-      // Navigate manually after everything is set
+      // Always navigate to home for new registrations (they're always users)
       Get.offAllNamed(AppRoutes.home);
 
       Get.snackbar(
@@ -156,6 +171,7 @@ class AuthController extends GetxController {
       );
 
       _clearFields();
+      // Navigation handled by auth state listener → _loadUserDataAndNavigate
     } on FirebaseAuthException catch (e) {
       _showError(_getAuthErrorMessage(e.code));
     } catch (e) {

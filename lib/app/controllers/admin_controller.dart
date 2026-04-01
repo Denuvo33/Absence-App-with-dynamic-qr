@@ -1,0 +1,290 @@
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
+class AdminController extends GetxController {
+  final DatabaseReference _db = FirebaseDatabase.instance.ref();
+
+  // Schedule settings
+  final scheduleClockIn = '07:00'.obs;
+  final scheduleClockOut = '16:00'.obs;
+  final tolerance = 10.obs;
+
+  // Data lists
+  final allUsers = <Map<String, dynamic>>[].obs;
+  final todayAttendance = <Map<String, dynamic>>[].obs;
+  final pendingLeaves = <Map<String, dynamic>>[].obs;
+  final allLeaves = <Map<String, dynamic>>[].obs;
+
+  // Loading states
+  final isLoading = false.obs;
+
+  // Stats
+  final totalUsers = 0.obs;
+  final totalHadirToday = 0.obs;
+  final totalLatToday = 0.obs;
+  final totalPendingLeaves = 0.obs;
+
+  String get _todayKey => DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+  @override
+  void onReady() {
+    super.onReady();
+    loadAll();
+  }
+
+  Future<void> loadAll() async {
+    isLoading.value = true;
+    await Future.wait([
+      loadSchedule(),
+      loadAllUsers(),
+      loadTodayAttendance(),
+      loadAllLeaveRequests(),
+    ]);
+    isLoading.value = false;
+  }
+
+  // ─── Schedule ──────────────────────────────────────────────
+
+  Future<void> loadSchedule() async {
+    try {
+      final snapshot = await _db.child('absence').get();
+      if (snapshot.exists) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        scheduleClockIn.value = (data['clockIn'] ?? '07:00').toString();
+        scheduleClockOut.value = (data['clockOut'] ?? '16:00').toString();
+        tolerance.value = int.tryParse(data['tolerance'].toString()) ?? 10;
+      }
+    } catch (e) {
+      debugPrint('Error loading schedule: $e');
+    }
+  }
+
+  Future<void> updateSchedule(String clockIn, String clockOut, int tol) async {
+    try {
+      await _db.child('absence').set({
+        'clockIn': clockIn,
+        'clockOut': clockOut,
+        'tolerance': tol,
+      });
+      scheduleClockIn.value = clockIn;
+      scheduleClockOut.value = clockOut;
+      tolerance.value = tol;
+
+      Get.snackbar(
+        'Berhasil',
+        'Jadwal berhasil diperbarui!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal memperbarui jadwal.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
+  }
+
+  // ─── Users ─────────────────────────────────────────────────
+
+  Future<void> loadAllUsers() async {
+    try {
+      final snapshot = await _db.child('users').get();
+      if (!snapshot.exists) return;
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      final list = <Map<String, dynamic>>[];
+
+      data.forEach((uid, value) {
+        if (value is Map) {
+          list.add({
+            'uid': uid.toString(),
+            'name': value['name']?.toString() ?? '',
+            'email': value['email']?.toString() ?? '',
+            'role': value['role']?.toString() ?? 'user',
+          });
+        }
+      });
+
+      // Sort: admins first, then by name
+      list.sort((a, b) {
+        if (a['role'] == 'admin' && b['role'] != 'admin') return -1;
+        if (a['role'] != 'admin' && b['role'] == 'admin') return 1;
+        return (a['name'] as String).compareTo(b['name'] as String);
+      });
+
+      allUsers.assignAll(list);
+      totalUsers.value = list.where((u) => u['role'] != 'admin').length;
+    } catch (e) {
+      debugPrint('Error loading users: $e');
+    }
+  }
+
+  // ─── Today Attendance ──────────────────────────────────────
+
+  Future<void> loadTodayAttendance() async {
+    try {
+      final usersSnapshot = await _db.child('users').get();
+      if (!usersSnapshot.exists) return;
+
+      final users = usersSnapshot.value as Map<dynamic, dynamic>;
+      final list = <Map<String, dynamic>>[];
+      int hadir = 0;
+      int telat = 0;
+
+      for (final entry in users.entries) {
+        final uid = entry.key.toString();
+        final userData = entry.value as Map<dynamic, dynamic>;
+        final role = userData['role']?.toString() ?? 'user';
+        if (role == 'admin') continue; // Skip admin users
+
+        final attSnapshot =
+            await _db.child('attendance').child(uid).child(_todayKey).get();
+
+        String status = 'belum';
+        String clockInStr = '--:--';
+        String clockOutStr = '--:--';
+        int lateMin = 0;
+
+        if (attSnapshot.exists) {
+          final att = attSnapshot.value as Map<dynamic, dynamic>;
+          hadir++;
+          if (att['clockIn'] != null) {
+            final cin =
+                DateTime.fromMillisecondsSinceEpoch(att['clockIn'] as int);
+            clockInStr = DateFormat('HH:mm').format(cin);
+          }
+          if (att['clockOut'] != null) {
+            final cout =
+                DateTime.fromMillisecondsSinceEpoch(att['clockOut'] as int);
+            clockOutStr = DateFormat('HH:mm').format(cout);
+          }
+          lateMin = (att['lateMinutes'] as int?) ?? 0;
+          status = att['status']?.toString() ?? 'on_time';
+          if (lateMin > 0) telat++;
+        }
+
+        list.add({
+          'uid': uid,
+          'name': userData['name']?.toString() ?? '',
+          'email': userData['email']?.toString() ?? '',
+          'clockIn': clockInStr,
+          'clockOut': clockOutStr,
+          'status': status,
+          'lateMinutes': lateMin,
+        });
+      }
+
+      // Sort: hadir first, then belum
+      list.sort((a, b) {
+        if (a['status'] == 'belum' && b['status'] != 'belum') return 1;
+        if (a['status'] != 'belum' && b['status'] == 'belum') return -1;
+        return (a['name'] as String).compareTo(b['name'] as String);
+      });
+
+      todayAttendance.assignAll(list);
+      totalHadirToday.value = hadir;
+      totalLatToday.value = telat;
+    } catch (e) {
+      debugPrint('Error loading today attendance: $e');
+    }
+  }
+
+  // ─── Leave Requests ────────────────────────────────────────
+
+  Future<void> loadAllLeaveRequests() async {
+    try {
+      final usersSnapshot = await _db.child('users').get();
+      if (!usersSnapshot.exists) return;
+
+      final users = usersSnapshot.value as Map<dynamic, dynamic>;
+      final list = <Map<String, dynamic>>[];
+      int pending = 0;
+
+      for (final entry in users.entries) {
+        final uid = entry.key.toString();
+        final userData = entry.value as Map<dynamic, dynamic>;
+        final userName = userData['name']?.toString() ?? '';
+
+        final leavesSnapshot =
+            await _db.child('leave_requests').child(uid).get();
+        if (!leavesSnapshot.exists) continue;
+
+        final leaves = leavesSnapshot.value as Map<dynamic, dynamic>;
+        leaves.forEach((key, value) {
+          if (value is Map) {
+            final status = value['status']?.toString() ?? 'pending';
+            if (status == 'pending') pending++;
+            list.add({
+              'id': key.toString(),
+              'uid': uid,
+              'userName': userName,
+              'type': value['type']?.toString() ?? '',
+              'startDate': value['startDate']?.toString() ?? '',
+              'endDate': value['endDate']?.toString() ?? '',
+              'reason': value['reason']?.toString() ?? '',
+              'status': status,
+              'createdAt': value['createdAt'],
+            });
+          }
+        });
+      }
+
+      // Sort: pending first, then by createdAt desc
+      list.sort((a, b) {
+        if (a['status'] == 'pending' && b['status'] != 'pending') return -1;
+        if (a['status'] != 'pending' && b['status'] == 'pending') return 1;
+        final aTime = a['createdAt'] ?? 0;
+        final bTime = b['createdAt'] ?? 0;
+        return (bTime as int).compareTo(aTime as int);
+      });
+
+      allLeaves.assignAll(list);
+      pendingLeaves.assignAll(list.where((l) => l['status'] == 'pending'));
+      totalPendingLeaves.value = pending;
+    } catch (e) {
+      debugPrint('Error loading leave requests: $e');
+    }
+  }
+
+  // Approve / Reject leave
+  Future<void> updateLeaveStatus(
+      String uid, String requestId, String newStatus) async {
+    try {
+      await _db
+          .child('leave_requests')
+          .child(uid)
+          .child(requestId)
+          .update({'status': newStatus});
+
+      Get.snackbar(
+        newStatus == 'approved' ? 'Disetujui' : 'Ditolak',
+        'Pengajuan berhasil ${newStatus == "approved" ? "disetujui" : "ditolak"}.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: newStatus == 'approved'
+            ? Colors.green.shade600
+            : Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+
+      loadAllLeaveRequests();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal memperbarui status.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
+  }
+}

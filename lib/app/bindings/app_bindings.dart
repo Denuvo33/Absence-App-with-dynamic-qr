@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/absence_controller.dart';
 import '../controllers/leave_controller.dart';
+import '../controllers/admin_controller.dart';
 
 class AuthBinding extends Bindings {
   @override
@@ -9,5 +10,6 @@ class AuthBinding extends Bindings {
     Get.put<AuthController>(AuthController(), permanent: true);
     Get.put<AbsenceController>(AbsenceController(), permanent: true);
     Get.put<LeaveController>(LeaveController(), permanent: true);
+    Get.put<AdminController>(AdminController(), permanent: true);
   }
 }

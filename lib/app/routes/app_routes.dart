@@ -5,4 +5,5 @@ class AppRoutes {
   static const history = '/history';
   static const dashboard = '/dashboard';
   static const leave = '/leave';
+  static const admin = '/admin';
 }
