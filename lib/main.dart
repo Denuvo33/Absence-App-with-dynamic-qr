@@ -13,6 +13,8 @@ import 'app/pages/history_page.dart';
 import 'app/pages/dashboard_page.dart';
 import 'app/pages/leave_page.dart';
 import 'app/pages/admin_dashboard_page.dart';
+import 'app/pages/admin_users_page.dart';
+import 'app/pages/admin_user_detail_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +46,8 @@ class MyApp extends StatelessWidget {
         GetPage(name: AppRoutes.dashboard, page: () => const DashboardPage()),
         GetPage(name: AppRoutes.leave, page: () => const LeavePage()),
         GetPage(name: AppRoutes.admin, page: () => const AdminDashboardPage()),
+        GetPage(name: AppRoutes.adminUsers, page: () => const AdminUsersPage()),
+        GetPage(name: AppRoutes.adminUserDetail, page: () => const AdminUserDetailPage()),
       ],
     );
   }

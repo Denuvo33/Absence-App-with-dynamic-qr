@@ -1,3 +1,4 @@
+import 'package:absence/app/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -56,7 +57,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildHomeTab(BuildContext context, AdminController adminC) {
-    final today = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(DateTime.now());
+    final today = DateFormat(
+      'EEEE, d MMMM yyyy',
+      'id_ID',
+    ).format(DateTime.now());
     final authC = Get.find<AuthController>();
 
     return SafeArea(
@@ -107,7 +111,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                     IconButton(
                       onPressed: () => _showLogoutDialog(authC),
-                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                      icon: const Icon(
+                        Icons.logout_rounded,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
@@ -116,57 +123,62 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               const SizedBox(height: 24),
 
               // Obx Stats
-              Obx(() => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Total Karyawan',
-                            value: '${adminC.totalUsers.value}',
-                            icon: Icons.people_alt,
-                            color: const Color(0xFF4A6CF7),
-                          ),
+              Obx(
+                () => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Total Karyawan',
+                          value: '${adminC.totalUsers.value}',
+                          icon: Icons.people_alt,
+                          color: const Color(0xFF4A6CF7),
+                          onTap: () => Get.toNamed('/admin/users'),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Hadir Hari Ini',
-                            value: '${adminC.totalHadirToday.value}',
-                            icon: Icons.check_circle,
-                            color: const Color(0xFF00897B),
-                          ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Hadir Hari Ini',
+                          value: '${adminC.totalHadirToday.value}',
+                          icon: Icons.check_circle,
+                          color: const Color(0xFF00897B),
                         ),
-                      ],
-                    ),
-                  )),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 16),
 
-              Obx(() => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Terlambat',
-                            value: '${adminC.totalLatToday.value}',
-                            icon: Icons.warning_rounded,
-                            color: Colors.red.shade500,
-                          ),
+              Obx(
+                () => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Terlambat',
+                          value: '${adminC.totalLatToday.value}',
+                          icon: Icons.warning_rounded,
+                          color: Colors.red.shade500,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Izin Menunggu',
-                            value: '${adminC.totalPendingLeaves.value}',
-                            icon: Icons.pending_actions,
-                            color: Colors.orange.shade600,
-                          ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Izin Menunggu',
+                          value: '${adminC.totalPendingLeaves.value}',
+                          icon: Icons.pending_actions,
+                          color: Colors.orange.shade600,
                         ),
-                      ],
-                    ),
-                  )),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 32),
 
@@ -210,91 +222,111 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     final isLate = item['lateMinutes'] > 0;
                     final isHadir = item['status'] != 'belum';
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: isLate
-                            ? Border.all(color: Colors.red.shade200)
-                            : null,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                item['name'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              if (isHadir)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: isLate
-                                        ? Colors.red.shade50
-                                        : Colors.green.shade50,
-                                    borderRadius: BorderRadius.circular(8),
+                    return InkWell(
+                      onTap: () {
+                        Get.toNamed(
+                          AppRoutes.adminUserDetail,
+                          arguments: item['uid'],
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: isLate
+                              ? Border.all(color: Colors.red.shade200)
+                              : null,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  item['name'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
-                                  child: Text(
-                                    isLate
-                                        ? 'Telat ${item['lateMinutes']}m'
-                                        : 'Tepat Waktu',
-                                    style: TextStyle(
-                                      fontSize: 12,
+                                ),
+                                if (isHadir)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
                                       color: isLate
-                                          ? Colors.red.shade700
-                                          : Colors.green.shade700,
-                                      fontWeight: FontWeight.bold,
+                                          ? Colors.red.shade50
+                                          : Colors.green.shade50,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      isLate
+                                          ? 'Telat ${item['lateMinutes']}m'
+                                          : 'Tepat Waktu',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isLate
+                                            ? Colors.red.shade700
+                                            : Colors.green.shade700,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'Belum Absen',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                )
-                              else
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'Belum Absen',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.login,
+                                  size: 16,
+                                  color: Colors.blue,
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              const Icon(Icons.login, size: 16, color: Colors.blue),
-                              const SizedBox(width: 4),
-                              Text(item['clockIn']),
-                              const SizedBox(width: 16),
-                              const Icon(Icons.logout, size: 16, color: Colors.purple),
-                              const SizedBox(width: 4),
-                              Text(item['clockOut']),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(width: 4),
+                                Text(item['clockIn']),
+                                const SizedBox(width: 16),
+                                const Icon(
+                                  Icons.logout,
+                                  size: 16,
+                                  color: Colors.purple,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(item['clockOut']),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -318,10 +350,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             color: Colors.white,
             child: const Text(
               'Pengajuan Izin / Cuti',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
@@ -382,8 +411,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
                                   color: statusColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -403,7 +434,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.blue.shade50,
                                   borderRadius: BorderRadius.circular(4),
@@ -439,7 +472,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 Expanded(
                                   child: OutlinedButton(
                                     onPressed: () => adminC.updateLeaveStatus(
-                                        leave['uid'], leave['id'], 'rejected'),
+                                      leave['uid'],
+                                      leave['id'],
+                                      'rejected',
+                                    ),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.red,
                                       side: const BorderSide(color: Colors.red),
@@ -451,7 +487,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 Expanded(
                                   child: ElevatedButton(
                                     onPressed: () => adminC.updateLeaveStatus(
-                                        leave['uid'], leave['id'], 'approved'),
+                                      leave['uid'],
+                                      leave['id'],
+                                      'approved',
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.green,
                                       foregroundColor: Colors.white,
@@ -478,7 +517,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget _buildSettingsTab(BuildContext context, AdminController adminC) {
     final cinCtrl = TextEditingController(text: adminC.scheduleClockIn.value);
     final coutCtrl = TextEditingController(text: adminC.scheduleClockOut.value);
-    final tolCtrl = TextEditingController(text: adminC.tolerance.value.toString());
+    final tolCtrl = TextEditingController(
+      text: adminC.tolerance.value.toString(),
+    );
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -488,10 +529,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           children: [
             const Text(
               'Pengaturan Jadwal',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             Container(
@@ -585,51 +623,57 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

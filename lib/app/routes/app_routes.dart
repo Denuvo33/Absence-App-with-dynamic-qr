@@ -6,4 +6,6 @@ class AppRoutes {
   static const dashboard = '/dashboard';
   static const leave = '/leave';
   static const admin = '/admin';
+  static const adminUsers = '/admin/users';
+  static const adminUserDetail = '/admin/user-detail';
 }

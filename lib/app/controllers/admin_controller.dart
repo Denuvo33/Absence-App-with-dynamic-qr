@@ -287,4 +287,147 @@ class AdminController extends GetxController {
       );
     }
   }
+
+  // ─── Individual User Detail ────────────────────────────────
+
+  final selectedUserHistory = <Map<String, dynamic>>[].obs;
+  final selectedUserStats = {}.obs;
+  final selectedUserInfo = {}.obs;
+  final isUserDetailLoading = false.obs;
+
+  Future<void> loadUserDetail(String uid) async {
+    try {
+      isUserDetailLoading.value = true;
+      selectedUserHistory.clear();
+      selectedUserStats.clear();
+      selectedUserInfo.clear();
+
+      // Load user basic info
+      final userSnap = await _db.child('users').child(uid).get();
+      if (userSnap.exists) {
+        final data = userSnap.value as Map<dynamic, dynamic>;
+        selectedUserInfo.value = {
+          'name': data['name']?.toString() ?? '',
+          'email': data['email']?.toString() ?? '',
+        };
+      }
+
+      // Load attendance history
+      final historySnap = await _db.child('attendance').child(uid).get();
+      if (!historySnap.exists) {
+        selectedUserStats.value = {
+          'totalHadir': 0,
+          'onTime': 0,
+          'late': 0,
+          'totalLateMinutes': 0,
+        };
+        return;
+      }
+
+      final attData = historySnap.value as Map<dynamic, dynamic>;
+      final list = <Map<String, dynamic>>[];
+      int totalHadir = 0;
+      int onTime = 0;
+      int late = 0;
+      int totalLateMinutes = 0;
+
+      attData.forEach((dateKey, value) {
+        if (value is Map) {
+          totalHadir++;
+          final clockIn = value['clockIn'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(value['clockIn'] as int)
+              : null;
+          final clockOut = value['clockOut'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(value['clockOut'] as int)
+              : null;
+          final lateMin = value['lateMinutes'] as int? ?? 0;
+          final status = value['status']?.toString() ?? 'on_time';
+
+          if (status == 'late') {
+            late++;
+            totalLateMinutes += lateMin;
+          } else {
+            onTime++;
+          }
+
+          String duration = '-';
+          if (clockIn != null) {
+            final end = clockOut ?? clockIn;
+            final diff = end.difference(clockIn);
+            duration = '${diff.inHours}j ${diff.inMinutes % 60}m';
+          }
+
+          final date = DateTime.tryParse(dateKey.toString());
+          list.add({
+            'recordType': 'attendance',
+            'dateKey': dateKey.toString(),
+            'date': date,
+            'clockIn': clockIn,
+            'clockOut': clockOut,
+            'duration': duration,
+            'isComplete': clockIn != null && clockOut != null,
+            'lateMinutes': lateMin,
+            'status': status,
+          });
+        }
+      });
+
+      // Fetch leave requests
+      int totalLeaves = 0;
+      final leaveSnap = await _db.child('leave_requests').child(uid).get();
+      if (leaveSnap.exists) {
+        final leavesData = leaveSnap.value as Map<dynamic, dynamic>;
+        leavesData.forEach((key, value) {
+          if (value is Map && value['status'] == 'approved') {
+            final startStr = value['startDate']?.toString();
+            final endStr = value['endDate']?.toString();
+            if (startStr != null && endStr != null) {
+              DateTime start = DateFormat('yyyy-MM-dd').parse(startStr);
+              DateTime end = DateFormat('yyyy-MM-dd').parse(endStr);
+              
+              // Normalize to start of day
+              start = DateTime(start.year, start.month, start.day);
+              end = DateTime(end.year, end.month, end.day);
+              
+              int diffDays = end.difference(start).inDays;
+              if (diffDays < 0) diffDays = 0;
+
+              // Generate an entry for each day of the leave
+              for (int i = 0; i <= diffDays; i++) {
+                final currentDate = start.add(Duration(days: i));
+                // Only consider weekday as valid leave day (Mon=1, Sun=7)
+                if (currentDate.weekday >= 1 && currentDate.weekday <= 5) {
+                  totalLeaves++;
+                  list.add({
+                    'recordType': 'leave',
+                    'dateKey': DateFormat('yyyy-MM-dd').format(currentDate),
+                    'date': currentDate,
+                    'leaveType': value['type']?.toString() ?? 'Izin',
+                    'reason': value['reason']?.toString() ?? '',
+                  });
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Sort chronological descending
+      list.sort((a, b) =>
+          (b['dateKey'] as String).compareTo(a['dateKey'] as String));
+
+      selectedUserHistory.assignAll(list);
+      selectedUserStats.value = {
+        'totalHadir': totalHadir,
+        'onTime': onTime,
+        'late': late,
+        'totalLateMinutes': totalLateMinutes,
+        'totalLeaves': totalLeaves,
+      };
+    } catch (e) {
+      debugPrint('Error loading user detail: $e');
+    } finally {
+      isUserDetailLoading.value = false;
+    }
+  }
 }
