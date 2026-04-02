@@ -231,24 +231,47 @@ class AbsenceController extends GetxController {
             data['clockIn'] as int,
           );
           hasClockIn.value = true;
+        } else {
+          clockInTime.value = null;
+          hasClockIn.value = false;
         }
+        
         if (data['clockOut'] != null) {
           clockOutTime.value = DateTime.fromMillisecondsSinceEpoch(
             data['clockOut'] as int,
           );
           hasClockOut.value = true;
+        } else {
+          clockOutTime.value = null;
+          hasClockOut.value = false;
         }
+
         if (data['lateMinutes'] != null) {
           lateMinutes.value = data['lateMinutes'] as int;
           isLate.value = lateMinutes.value > 0;
+        } else {
+          lateMinutes.value = 0;
+          isLate.value = false;
         }
-        if (data['clockInLocation'] != null) {
-          clockInLocationStr.value = data['clockInLocation'].toString();
-        }
-        if (data['clockOutLocation'] != null) {
-          clockOutLocationStr.value = data['clockOutLocation'].toString();
-        }
+
+        clockInLocationStr.value = data['clockInLocation']?.toString() ?? '';
+        clockOutLocationStr.value = data['clockOutLocation']?.toString() ?? '';
+      } else {
+        // Reset state for today if no record found (e.g. new day or deleted)
+        clockInTime.value = null;
+        clockOutTime.value = null;
+        hasClockIn.value = false;
+        hasClockOut.value = false;
+        lateMinutes.value = 0;
+        isLate.value = false;
+        clockInLocationStr.value = '';
+        clockOutLocationStr.value = '';
       }
+      
+      // Force refresh on hasClockIn to trigger Obx rebuilds 
+      // This ensures getters like canClockOut (which use DateTime.now()) are re-evaluated
+      hasClockIn.refresh();
+      
     } catch (e) {
       debugPrint('Error loading attendance: $e');
     }
