@@ -609,6 +609,36 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       text: adminC.tolerance.value.toString(),
     );
 
+    Future<void> _selectTime(BuildContext context, TextEditingController ctrl) async {
+      TimeOfDay initialTime = const TimeOfDay(hour: 7, minute: 0);
+      try {
+        final parts = ctrl.text.split(':');
+        if (parts.length == 2) {
+          initialTime = TimeOfDay(
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          );
+        }
+      } catch (_) {}
+
+      final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: initialTime,
+        builder: (BuildContext context, Widget? child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        },
+      );
+
+      if (picked != null) {
+        final String hour = picked.hour.toString().padLeft(2, '0');
+        final String minute = picked.minute.toString().padLeft(2, '0');
+        ctrl.text = '$hour:$minute';
+      }
+    }
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -637,18 +667,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 children: [
                   TextField(
                     controller: cinCtrl,
+                    readOnly: true,
+                    onTap: () => _selectTime(context, cinCtrl),
                     decoration: const InputDecoration(
-                      labelText: 'Jam Masuk (Format: HH:mm)',
-                      hintText: '07:00',
+                      labelText: 'Jam Masuk',
+                      prefixIcon: Icon(Icons.login_rounded),
+                      hintText: 'Pilih Jam Masuk',
                       border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: coutCtrl,
+                    readOnly: true,
+                    onTap: () => _selectTime(context, coutCtrl),
                     decoration: const InputDecoration(
-                      labelText: 'Jam Pulang (Format: HH:mm)',
-                      hintText: '16:00',
+                      labelText: 'Jam Pulang',
+                      prefixIcon: Icon(Icons.logout_rounded),
+                      hintText: 'Pilih Jam Pulang',
                       border: OutlineInputBorder(),
                     ),
                   ),
