@@ -273,16 +273,20 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                       item,
                     ) {
                       if (_filter == 'all') return true;
-                      if (_filter == 'hadir')
+                      if (_filter == 'hadir') {
                         return item['recordType'] == 'attendance';
-                      if (_filter == 'leave')
+                      }
+                      if (_filter == 'leave') {
                         return item['recordType'] == 'leave';
-                      if (_filter == 'late')
+                      }
+                      if (_filter == 'late') {
                         return item['recordType'] == 'attendance' &&
                             item['status'] == 'late';
-                      if (_filter == 'on_time')
+                      }
+                      if (_filter == 'on_time') {
                         return item['recordType'] == 'attendance' &&
                             item['status'] == 'on_time';
+                      }
                       return true;
                     }).toList();
 
@@ -724,6 +728,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
           duration: const Duration(seconds: 6),
           mainButton: TextButton(
             onPressed: () {
+              // ignore: deprecated_member_use
               Share.shareXFiles([
                 XFile(savedPath),
               ], text: 'Rekap Absensi $userName');

@@ -333,18 +333,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 Text(item['clockOut']),
                               ],
                             ),
-                            if (item['clockInLocation'] != '-' || item['clockOutLocation'] != '-') ...[
+                            if (item['clockInLocation'] != '-' ||
+                                item['clockOutLocation'] != '-') ...[
                               const SizedBox(height: 8),
                               if (item['clockInLocation'] != '-')
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.location_on, size: 14, color: Colors.blue.shade400),
+                                    Icon(
+                                      Icons.location_on,
+                                      size: 14,
+                                      color: Colors.blue.shade400,
+                                    ),
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
                                         'M: ${item['clockInLocation']}',
-                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -356,12 +364,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.location_on, size: 14, color: Colors.purple.shade400),
+                                    Icon(
+                                      Icons.location_on,
+                                      size: 14,
+                                      color: Colors.purple.shade400,
+                                    ),
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
                                         'P: ${item['clockOutLocation']}',
-                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -402,22 +417,32 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4A6CF7),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Obx(() {
                     final month = adminC.selectedMonthLeaves.value;
-                    final label = DateFormat('MMMM yyyy', 'id_ID').format(month);
-                    final isCurrentMonth = month.month == DateTime.now().month &&
+                    final label = DateFormat(
+                      'MMMM yyyy',
+                      'id_ID',
+                    ).format(month);
+                    final isCurrentMonth =
+                        month.month == DateTime.now().month &&
                         month.year == DateTime.now().year;
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
                           onPressed: adminC.previousLeavesMonth,
-                          icon: const Icon(Icons.chevron_left, color: Colors.white),
+                          icon: const Icon(
+                            Icons.chevron_left,
+                            color: Colors.white,
+                          ),
                         ),
                         Text(
                           label,
@@ -428,10 +453,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                         ),
                         IconButton(
-                          onPressed: isCurrentMonth ? null : adminC.nextLeavesMonth,
+                          onPressed: isCurrentMonth
+                              ? null
+                              : adminC.nextLeavesMonth,
                           icon: Icon(
                             Icons.chevron_right,
-                            color: isCurrentMonth ? Colors.white38 : Colors.white,
+                            color: isCurrentMonth
+                                ? Colors.white38
+                                : Colors.white,
                           ),
                         ),
                       ],
@@ -609,7 +638,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       text: adminC.tolerance.value.toString(),
     );
 
-    Future<void> _selectTime(BuildContext context, TextEditingController ctrl) async {
+    // ignore: no_leading_underscores_for_local_identifiers
+    Future<void> _selectTime(
+      BuildContext context,
+      TextEditingController ctrl,
+    ) async {
       TimeOfDay initialTime = const TimeOfDay(hour: 7, minute: 0);
       try {
         final parts = ctrl.text.split(':');

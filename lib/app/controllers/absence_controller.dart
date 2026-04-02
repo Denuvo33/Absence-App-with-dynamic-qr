@@ -62,8 +62,12 @@ class AbsenceController extends GetxController {
     // Cek GPS aktif tidak
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      Get.snackbar('GPS Nonaktif', 'Layanan lokasi (GPS) tidak aktif. Mohon nyalakan GPS untuk absen.',
-          backgroundColor: Colors.red.shade600, colorText: Colors.white);
+      Get.snackbar(
+        'GPS Nonaktif',
+        'Layanan lokasi (GPS) tidak aktif. Mohon nyalakan GPS untuk absen.',
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+      );
       return null;
     }
 
@@ -71,38 +75,51 @@ class AbsenceController extends GetxController {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        Get.snackbar('Izin Ditolak', 'Akses lokasi dibutuhkan untuk validasi absensi.',
-            backgroundColor: Colors.red.shade600, colorText: Colors.white);
+        Get.snackbar(
+          'Izin Ditolak',
+          'Akses lokasi dibutuhkan untuk validasi absensi.',
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+        );
         return null; // Ditolak
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      Get.snackbar('Izin Permanen Ditolak', 'Akses lokasi diblokir. Silakan izinkan dari pengaturan sistem.',
-          backgroundColor: Colors.red.shade600, colorText: Colors.white);
+      Get.snackbar(
+        'Izin Permanen Ditolak',
+        'Akses lokasi diblokir. Silakan izinkan dari pengaturan sistem.',
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+      );
       return null;
     }
 
     try {
       Position position = await Geolocator.getCurrentPosition(
+        // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.high,
+        // ignore: deprecated_member_use
         timeLimit: const Duration(seconds: 15),
       );
 
       // Translate ke address
       try {
-        List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
         if (placemarks.isNotEmpty) {
           final place = placemarks.first;
           final street = place.street ?? '';
           final subLocality = place.subLocality ?? '';
           final locality = place.locality ?? '';
-          
+
           List<String> addressParts = [];
           if (street.isNotEmpty) addressParts.add(street);
           if (subLocality.isNotEmpty) addressParts.add(subLocality);
           if (locality.isNotEmpty) addressParts.add(locality);
-          
+
           if (addressParts.isNotEmpty) {
             return addressParts.join(', ');
           }
@@ -113,10 +130,13 @@ class AbsenceController extends GetxController {
 
       // Fallback
       return 'Geocoding Timeout/Fail (Lat: ${position.latitude.toStringAsFixed(5)}, Lng: ${position.longitude.toStringAsFixed(5)})';
-
     } catch (e) {
-      Get.snackbar('Gagal Melacak Lokasi', 'Terjadi masalah jaringan atau GPS timeout.',
-          backgroundColor: Colors.red.shade600, colorText: Colors.white);
+      Get.snackbar(
+        'Gagal Melacak Lokasi',
+        'Terjadi masalah jaringan atau GPS timeout.',
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+      );
       return null;
     }
   }
@@ -235,7 +255,7 @@ class AbsenceController extends GetxController {
           clockInTime.value = null;
           hasClockIn.value = false;
         }
-        
+
         if (data['clockOut'] != null) {
           clockOutTime.value = DateTime.fromMillisecondsSinceEpoch(
             data['clockOut'] as int,
@@ -267,11 +287,10 @@ class AbsenceController extends GetxController {
         clockInLocationStr.value = '';
         clockOutLocationStr.value = '';
       }
-      
-      // Force refresh on hasClockIn to trigger Obx rebuilds 
+
+      // Force refresh on hasClockIn to trigger Obx rebuilds
       // This ensures getters like canClockOut (which use DateTime.now()) are re-evaluated
       hasClockIn.refresh();
-      
     } catch (e) {
       debugPrint('Error loading attendance: $e');
     }
@@ -298,7 +317,7 @@ class AbsenceController extends GetxController {
     final address = await _getLocationAndAddress();
     if (address == null) {
       isLoading.value = false;
-      return; 
+      return;
     }
 
     try {
@@ -331,7 +350,7 @@ class AbsenceController extends GetxController {
       lateMinutes.value = late;
       isLate.value = late > 0;
 
-      final lateStr = late > 0 ? ' (Telat ${late} menit)' : '';
+      final lateStr = late > 0 ? ' (Telat $late menit)' : '';
       Get.snackbar(
         'Clock In Berhasil',
         'Absen masuk pukul ${DateFormat("HH:mm").format(now)}$lateStr',
