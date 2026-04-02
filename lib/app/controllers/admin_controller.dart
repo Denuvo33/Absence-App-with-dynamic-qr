@@ -151,6 +151,8 @@ class AdminController extends GetxController {
         String status = 'belum';
         String clockInStr = '--:--';
         String clockOutStr = '--:--';
+        String clockInLoc = '-';
+        String clockOutLoc = '-';
         int lateMin = 0;
 
         if (attSnapshot.exists) {
@@ -168,6 +170,8 @@ class AdminController extends GetxController {
           }
           lateMin = (att['lateMinutes'] as int?) ?? 0;
           status = att['status']?.toString() ?? 'on_time';
+          clockInLoc = att['clockInLocation']?.toString() ?? '-';
+          clockOutLoc = att['clockOutLocation']?.toString() ?? '-';
           if (lateMin > 0) telat++;
         }
 
@@ -177,6 +181,8 @@ class AdminController extends GetxController {
           'email': userData['email']?.toString() ?? '',
           'clockIn': clockInStr,
           'clockOut': clockOutStr,
+          'clockInLocation': clockInLoc,
+          'clockOutLocation': clockOutLoc,
           'status': status,
           'lateMinutes': lateMin,
         });
@@ -198,6 +204,41 @@ class AdminController extends GetxController {
   }
 
   // ─── Leave Requests ────────────────────────────────────────
+
+  final selectedMonthLeaves = DateTime.now().obs;
+
+  List<Map<String, dynamic>> get filteredLeaves {
+    final month = selectedMonthLeaves.value.month;
+    final year = selectedMonthLeaves.value.year;
+
+    return allLeaves.where((leave) {
+      if (leave['status'] == 'pending') return true;
+      final createdAt = leave['createdAt'];
+      if (createdAt != null) {
+        final date = DateTime.fromMillisecondsSinceEpoch(createdAt as int);
+        return date.month == month && date.year == year;
+      }
+      return false;
+    }).toList();
+  }
+
+  void previousLeavesMonth() {
+    selectedMonthLeaves.value = DateTime(
+      selectedMonthLeaves.value.year,
+      selectedMonthLeaves.value.month - 1,
+    );
+  }
+
+  void nextLeavesMonth() {
+    final now = DateTime.now();
+    final next = DateTime(
+      selectedMonthLeaves.value.year,
+      selectedMonthLeaves.value.month + 1,
+    );
+    if (next.isBefore(DateTime(now.year, now.month + 1))) {
+      selectedMonthLeaves.value = next;
+    }
+  }
 
   Future<void> loadAllLeaveRequests() async {
     try {
@@ -291,16 +332,75 @@ class AdminController extends GetxController {
   // ─── Individual User Detail ────────────────────────────────
 
   final selectedUserHistory = <Map<String, dynamic>>[].obs;
-  final selectedUserStats = {}.obs;
   final selectedUserInfo = {}.obs;
   final isUserDetailLoading = false.obs;
+
+  final selectedMonthAdmin = DateTime.now().obs;
+
+  List<Map<String, dynamic>> get filteredUserHistory {
+    final month = selectedMonthAdmin.value.month;
+    final year = selectedMonthAdmin.value.year;
+    return selectedUserHistory.where((e) {
+      final date = e['date'] as DateTime?;
+      if (date == null) return false;
+      return date.month == month && date.year == year;
+    }).toList();
+  }
+
+  Map<String, dynamic> get filteredUserStats {
+    int totalHadir = 0;
+    int onTime = 0;
+    int late = 0;
+    int totalLateMinutes = 0;
+    int totalLeaves = 0;
+
+    for (var item in filteredUserHistory) {
+      if (item['recordType'] == 'attendance') {
+        totalHadir++;
+        if (item['status'] == 'late') {
+          late++;
+          totalLateMinutes += item['lateMinutes'] as int? ?? 0;
+        } else {
+          onTime++;
+        }
+      } else if (item['recordType'] == 'leave') {
+        totalLeaves++;
+      }
+    }
+
+    return {
+      'totalHadir': totalHadir,
+      'onTime': onTime,
+      'late': late,
+      'totalLateMinutes': totalLateMinutes,
+      'totalLeaves': totalLeaves,
+    };
+  }
+
+  void previousAdminMonth() {
+    selectedMonthAdmin.value = DateTime(
+      selectedMonthAdmin.value.year,
+      selectedMonthAdmin.value.month - 1,
+    );
+  }
+
+  void nextAdminMonth() {
+    final now = DateTime.now();
+    final next = DateTime(
+      selectedMonthAdmin.value.year,
+      selectedMonthAdmin.value.month + 1,
+    );
+    if (next.isBefore(DateTime(now.year, now.month + 1))) {
+      selectedMonthAdmin.value = next;
+    }
+  }
 
   Future<void> loadUserDetail(String uid) async {
     try {
       isUserDetailLoading.value = true;
       selectedUserHistory.clear();
-      selectedUserStats.clear();
       selectedUserInfo.clear();
+      selectedMonthAdmin.value = DateTime.now();
 
       // Load user basic info
       final userSnap = await _db.child('users').child(uid).get();
@@ -315,25 +415,17 @@ class AdminController extends GetxController {
       // Load attendance history
       final historySnap = await _db.child('attendance').child(uid).get();
       if (!historySnap.exists) {
-        selectedUserStats.value = {
-          'totalHadir': 0,
-          'onTime': 0,
-          'late': 0,
-          'totalLateMinutes': 0,
-        };
         return;
       }
 
       final attData = historySnap.value as Map<dynamic, dynamic>;
       final list = <Map<String, dynamic>>[];
-      int totalHadir = 0;
-      int onTime = 0;
-      int late = 0;
-      int totalLateMinutes = 0;
 
       attData.forEach((dateKey, value) {
         if (value is Map) {
-          totalHadir++;
+          final clockInLoc = value['clockInLocation']?.toString() ?? '-';
+          final clockOutLoc = value['clockOutLocation']?.toString() ?? '-';
+
           final clockIn = value['clockIn'] != null
               ? DateTime.fromMillisecondsSinceEpoch(value['clockIn'] as int)
               : null;
@@ -342,13 +434,6 @@ class AdminController extends GetxController {
               : null;
           final lateMin = value['lateMinutes'] as int? ?? 0;
           final status = value['status']?.toString() ?? 'on_time';
-
-          if (status == 'late') {
-            late++;
-            totalLateMinutes += lateMin;
-          } else {
-            onTime++;
-          }
 
           String duration = '-';
           if (clockIn != null) {
@@ -364,6 +449,8 @@ class AdminController extends GetxController {
             'date': date,
             'clockIn': clockIn,
             'clockOut': clockOut,
+            'clockInLocation': clockInLoc,
+            'clockOutLocation': clockOutLoc,
             'duration': duration,
             'isComplete': clockIn != null && clockOut != null,
             'lateMinutes': lateMin,
@@ -373,7 +460,6 @@ class AdminController extends GetxController {
       });
 
       // Fetch leave requests
-      int totalLeaves = 0;
       final leaveSnap = await _db.child('leave_requests').child(uid).get();
       if (leaveSnap.exists) {
         final leavesData = leaveSnap.value as Map<dynamic, dynamic>;
@@ -397,7 +483,6 @@ class AdminController extends GetxController {
                 final currentDate = start.add(Duration(days: i));
                 // Only consider weekday as valid leave day (Mon=1, Sun=7)
                 if (currentDate.weekday >= 1 && currentDate.weekday <= 5) {
-                  totalLeaves++;
                   list.add({
                     'recordType': 'leave',
                     'dateKey': DateFormat('yyyy-MM-dd').format(currentDate),
@@ -417,13 +502,6 @@ class AdminController extends GetxController {
           (b['dateKey'] as String).compareTo(a['dateKey'] as String));
 
       selectedUserHistory.assignAll(list);
-      selectedUserStats.value = {
-        'totalHadir': totalHadir,
-        'onTime': onTime,
-        'late': late,
-        'totalLateMinutes': totalLateMinutes,
-        'totalLeaves': totalLeaves,
-      };
     } catch (e) {
       debugPrint('Error loading user detail: $e');
     } finally {

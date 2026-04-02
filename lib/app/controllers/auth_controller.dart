@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import '../routes/app_routes.dart';
 import 'absence_controller.dart';
+import 'admin_controller.dart';
 
 class AuthController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -30,7 +32,21 @@ class AuthController extends GetxController {
   bool get isAdmin => userRole.value == 'admin';
 
   @override
-  void onReady() {
+  void onReady() async {
+    var locationPermission = await Geolocator.checkPermission();
+    if (locationPermission == LocationPermission.denied) {
+      locationPermission = await Geolocator.requestPermission();
+    }
+    if (locationPermission == LocationPermission.deniedForever) {
+      Get.snackbar(
+        'Error',
+        'Lokasi tidak di Izinkan',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
     super.onReady();
     // Check initial auth state once
     if (_auth.currentUser != null) {
@@ -83,6 +99,7 @@ class AuthController extends GetxController {
     absenceC.loadTodayAttendance();
 
     if (userRole.value == 'admin') {
+      Get.find<AdminController>().loadAll();
       Get.offAllNamed(AppRoutes.admin);
     } else {
       Get.offAllNamed(AppRoutes.home);

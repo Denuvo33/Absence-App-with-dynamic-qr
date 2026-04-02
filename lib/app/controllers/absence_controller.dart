@@ -3,6 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 class AbsenceController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -14,6 +16,8 @@ class AbsenceController extends GetxController {
   final clockOutTime = Rxn<DateTime>();
   final hasClockIn = false.obs;
   final hasClockOut = false.obs;
+  final clockInLocationStr = ''.obs;
+  final clockOutLocationStr = ''.obs;
 
   // Schedule from Firebase /absence
   final scheduleClockIn = ''.obs; // e.g. "07:00"
@@ -43,8 +47,78 @@ class AbsenceController extends GetxController {
     hasClockOut.value = false;
     lateMinutes.value = 0;
     isLate.value = false;
+    clockInLocationStr.value = '';
+    clockOutLocationStr.value = '';
     historyList.clear();
     isLoading.value = false;
+  }
+
+  // ─── Location Helpers ────────────────────────────────────────
+
+  Future<String?> _getLocationAndAddress() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Cek GPS aktif tidak
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      Get.snackbar('GPS Nonaktif', 'Layanan lokasi (GPS) tidak aktif. Mohon nyalakan GPS untuk absen.',
+          backgroundColor: Colors.red.shade600, colorText: Colors.white);
+      return null;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        Get.snackbar('Izin Ditolak', 'Akses lokasi dibutuhkan untuk validasi absensi.',
+            backgroundColor: Colors.red.shade600, colorText: Colors.white);
+        return null; // Ditolak
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      Get.snackbar('Izin Permanen Ditolak', 'Akses lokasi diblokir. Silakan izinkan dari pengaturan sistem.',
+          backgroundColor: Colors.red.shade600, colorText: Colors.white);
+      return null;
+    }
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+
+      // Translate ke address
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          final street = place.street ?? '';
+          final subLocality = place.subLocality ?? '';
+          final locality = place.locality ?? '';
+          
+          List<String> addressParts = [];
+          if (street.isNotEmpty) addressParts.add(street);
+          if (subLocality.isNotEmpty) addressParts.add(subLocality);
+          if (locality.isNotEmpty) addressParts.add(locality);
+          
+          if (addressParts.isNotEmpty) {
+            return addressParts.join(', ');
+          }
+        }
+      } catch (e) {
+        debugPrint('Geocoding fail: $e');
+      }
+
+      // Fallback
+      return 'Geocoding Timeout/Fail (Lat: ${position.latitude.toStringAsFixed(5)}, Lng: ${position.longitude.toStringAsFixed(5)})';
+
+    } catch (e) {
+      Get.snackbar('Gagal Melacak Lokasi', 'Terjadi masalah jaringan atau GPS timeout.',
+          backgroundColor: Colors.red.shade600, colorText: Colors.white);
+      return null;
+    }
   }
 
   // ─── Schedule ──────────────────────────────────────────────
@@ -168,6 +242,12 @@ class AbsenceController extends GetxController {
           lateMinutes.value = data['lateMinutes'] as int;
           isLate.value = lateMinutes.value > 0;
         }
+        if (data['clockInLocation'] != null) {
+          clockInLocationStr.value = data['clockInLocation'].toString();
+        }
+        if (data['clockOutLocation'] != null) {
+          clockOutLocationStr.value = data['clockOutLocation'].toString();
+        }
       }
     } catch (e) {
       debugPrint('Error loading attendance: $e');
@@ -191,8 +271,14 @@ class AbsenceController extends GetxController {
       return;
     }
 
+    isLoading.value = true;
+    final address = await _getLocationAndAddress();
+    if (address == null) {
+      isLoading.value = false;
+      return; 
+    }
+
     try {
-      isLoading.value = true;
       final now = DateTime.now();
 
       // Calculate lateness
@@ -213,10 +299,12 @@ class AbsenceController extends GetxController {
         'date': _todayKey,
         'lateMinutes': late,
         'status': status,
+        'clockInLocation': address,
       });
 
       clockInTime.value = now;
       hasClockIn.value = true;
+      clockInLocationStr.value = address;
       lateMinutes.value = late;
       isLate.value = late > 0;
 
@@ -262,16 +350,24 @@ class AbsenceController extends GetxController {
       return;
     }
 
+    isLoading.value = true;
+    final address = await _getLocationAndAddress();
+    if (address == null) {
+      isLoading.value = false;
+      return; // Berhenti jika lokasi gagal diset
+    }
+
     try {
-      isLoading.value = true;
       final now = DateTime.now();
 
       await _db.child('attendance').child(_uid).child(_todayKey).update({
         'clockOut': now.millisecondsSinceEpoch,
+        'clockOutLocation': address,
       });
 
       clockOutTime.value = now;
       hasClockOut.value = true;
+      clockOutLocationStr.value = address;
 
       Get.snackbar(
         'Clock Out Berhasil',
@@ -368,6 +464,8 @@ class AbsenceController extends GetxController {
             'isComplete': clockIn != null && clockOut != null,
             'lateMinutes': late,
             'status': status,
+            'clockInLocation': value['clockInLocation']?.toString() ?? '-',
+            'clockOutLocation': value['clockOutLocation']?.toString() ?? '-',
           });
         }
       });

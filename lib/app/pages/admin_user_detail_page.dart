@@ -60,7 +60,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
           return const Center(child: Text('Data tidak ditemukan.'));
         }
 
-        final stats = adminC.selectedUserStats;
+        final stats = adminC.filteredUserStats;
         final totalHadir = stats['totalHadir'] ?? 0;
         final totalLate = stats['late'] ?? 0;
         final totalOnTime = stats['onTime'] ?? 0;
@@ -90,9 +90,12 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundColor: const Color(0xFF4A6CF7).withValues(alpha: 0.1),
+                      backgroundColor: const Color(
+                        0xFF4A6CF7,
+                      ).withValues(alpha: 0.1),
                       child: Text(
-                        user['name'] != null && user['name'].toString().isNotEmpty
+                        user['name'] != null &&
+                                user['name'].toString().isNotEmpty
                             ? user['name'].toString()[0].toUpperCase()
                             : 'U',
                         style: const TextStyle(
@@ -202,6 +205,55 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
               ),
               const SizedBox(height: 32),
 
+              // Month Selector
+              Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4A6CF7),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Obx(() {
+                  final month = adminC.selectedMonthAdmin.value;
+                  final label = DateFormat('MMMM yyyy', 'id_ID').format(month);
+                  final isCurrentMonth =
+                      month.month == DateTime.now().month &&
+                      month.year == DateTime.now().year;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        onPressed: adminC.previousAdminMonth,
+                        icon: const Icon(
+                          Icons.chevron_left,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: isCurrentMonth
+                            ? null
+                            : adminC.nextAdminMonth,
+                        icon: Icon(
+                          Icons.chevron_right,
+                          color: isCurrentMonth ? Colors.white38 : Colors.white,
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+
               // Attendance History
               const Text(
                 'Riwayat Absensi Lengkap',
@@ -212,46 +264,142 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (adminC.selectedUserHistory.isEmpty)
+              if (adminC.filteredUserHistory.isEmpty)
                 const Center(child: Text('Belum ada riwayat absensi.'))
               else
-                Builder(builder: (context) {
-                  final filteredList = adminC.selectedUserHistory.where((item) {
-                    if (_filter == 'all') return true;
-                    if (_filter == 'hadir') return item['recordType'] == 'attendance';
-                    if (_filter == 'leave') return item['recordType'] == 'leave';
-                    if (_filter == 'late') return item['recordType'] == 'attendance' && item['status'] == 'late';
-                    if (_filter == 'on_time') return item['recordType'] == 'attendance' && item['status'] == 'on_time';
-                    return true;
-                  }).toList();
+                Builder(
+                  builder: (context) {
+                    final filteredList = adminC.filteredUserHistory.where((
+                      item,
+                    ) {
+                      if (_filter == 'all') return true;
+                      if (_filter == 'hadir')
+                        return item['recordType'] == 'attendance';
+                      if (_filter == 'leave')
+                        return item['recordType'] == 'leave';
+                      if (_filter == 'late')
+                        return item['recordType'] == 'attendance' &&
+                            item['status'] == 'late';
+                      if (_filter == 'on_time')
+                        return item['recordType'] == 'attendance' &&
+                            item['status'] == 'on_time';
+                      return true;
+                    }).toList();
 
-                  if (filteredList.isEmpty) {
-                    return const Center(child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text('Tidak ada set data pada filter ini.'),
-                    ));
-                  }
+                    if (filteredList.isEmpty) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text('Tidak ada set data pada filter ini.'),
+                        ),
+                      );
+                    }
 
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredList.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredList[index];
-                      final isLeave = item['recordType'] == 'leave';
-                      final date = item['date'] as DateTime?;
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredList.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredList[index];
+                        final isLeave = item['recordType'] == 'leave';
+                        final date = item['date'] as DateTime?;
 
-                      final dateStr = date != null
-                          ? DateFormat('EEEE, d MMM yyyy', 'id_ID').format(date)
-                          : item['dateKey'];
-                      if (isLeave) {
+                        final dateStr = date != null
+                            ? DateFormat(
+                                'EEEE, d MMM yyyy',
+                                'id_ID',
+                              ).format(date)
+                            : item['dateKey'];
+                        if (isLeave) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.blue.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      dateStr,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.shade50,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        item['leaveType']
+                                                ?.toString()
+                                                .toUpperCase() ??
+                                            'IZIN',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.blue.shade700,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Alasan: ${item['reason']}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        // Normal Attendance Rendering
+                        final isComplete = item['isComplete'] == true;
+                        final isLate = item['status'] == 'late';
+
+                        final clockIn = item['clockIn'] != null
+                            ? DateFormat('HH:mm').format(item['clockIn'])
+                            : '--:--';
+                        final clockOut = item['clockOut'] != null
+                            ? DateFormat('HH:mm').format(item['clockOut'])
+                            : '--:--';
+                        final clockInLoc =
+                            item['clockInLocation']?.toString() ?? '-';
+                        final clockOutLoc =
+                            item['clockOutLocation']?.toString() ?? '-';
+
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.blue.shade200),
+                            border: isLate
+                                ? Border.all(color: Colors.red.shade200)
+                                : null,
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.04),
@@ -264,7 +412,8 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     dateStr,
@@ -273,172 +422,170 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                                       fontSize: 14,
                                     ),
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.shade50,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      item['leaveType']?.toString().toUpperCase() ?? 'IZIN',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.blue.shade700,
-                                        fontWeight: FontWeight.bold,
+                                  if (isComplete)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isLate
+                                            ? Colors.red.shade50
+                                            : Colors.green.shade50,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        isLate
+                                            ? 'Telat ${item['lateMinutes']}m'
+                                            : 'Tepat Waktu',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: isLate
+                                              ? Colors.red.shade700
+                                              : Colors.green.shade700,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'Belum Pulang',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                  )
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Alasan: ${item['reason']}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade700,
-                                ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Column(
+                                    children: [
+                                      const Icon(
+                                        Icons.login,
+                                        size: 18,
+                                        color: Colors.blue,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        clockIn,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: isLate
+                                              ? Colors.red
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Icon(
+                                        Icons.logout,
+                                        size: 18,
+                                        color: Colors.purple,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        clockOut,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Icon(
+                                        Icons.timer_outlined,
+                                        size: 18,
+                                        color: Colors.orange,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item['duration'],
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.orange,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
+                              if (clockInLoc != '-' || clockOutLoc != '-') ...[
+                                const SizedBox(height: 12),
+                                if (clockInLoc != '-')
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.location_on,
+                                        size: 14,
+                                        color: Colors.blue.shade600,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          'Masuk: $clockInLoc',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                if (clockOutLoc != '-') ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.location_on,
+                                        size: 14,
+                                        color: Colors.purple.shade600,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          'Pulang: $clockOutLoc',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
                             ],
                           ),
                         );
-                      }
-
-                      // Normal Attendance Rendering
-                      final isComplete = item['isComplete'] == true;
-                      final isLate = item['status'] == 'late';
-
-                      final clockIn = item['clockIn'] != null
-                          ? DateFormat('HH:mm').format(item['clockIn'])
-                          : '--:--';
-                      final clockOut = item['clockOut'] != null
-                          ? DateFormat('HH:mm').format(item['clockOut'])
-                          : '--:--';
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: isLate
-                              ? Border.all(color: Colors.red.shade200)
-                              : null,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  dateStr,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                if (isComplete)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: isLate
-                                          ? Colors.red.shade50
-                                          : Colors.green.shade50,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      isLate
-                                          ? 'Telat ${item['lateMinutes']}m'
-                                          : 'Tepat Waktu',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: isLate
-                                            ? Colors.red.shade700
-                                            : Colors.green.shade700,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade100,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'Belum Pulang',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Column(
-                                children: [
-                                  const Icon(Icons.login, size: 18, color: Colors.blue),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    clockIn,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: isLate ? Colors.red : Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  const Icon(Icons.logout, size: 18, color: Colors.purple),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    clockOut,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  const Icon(Icons.timer_outlined, size: 18, color: Colors.orange),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    item['duration'],
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                      },
                     );
                   },
-                );
-              }),
+                ),
             ],
           ),
         );
@@ -453,7 +600,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
       return;
     }
 
-    final stats = adminC.selectedUserStats;
+    final stats = adminC.filteredUserStats;
     final totalHadir = stats['totalHadir'] ?? 0;
     final totalLate = stats['late'] ?? 0;
     final totalOnTime = stats['onTime'] ?? 0;
@@ -488,14 +635,16 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
       'Tipe',
       'Status',
       'Jam Masuk',
+      'Lokasi Masuk',
       'Jam Keluar',
+      'Lokasi Keluar',
       'Durasi',
       'Menit Telat',
-      'Keterangan/Alasan'
+      'Keterangan/Alasan',
     ]);
 
     // Data Riwayat
-    final history = adminC.selectedUserHistory;
+    final history = adminC.filteredUserHistory;
     for (var item in history) {
       final isLeave = item['recordType'] == 'leave';
       final date = item['date'] as DateTime?;
@@ -514,19 +663,23 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
           '-',
           '-',
           '-',
+          '-',
+          '-',
           reason,
         ]);
       } else {
         final clockInStr = item['clockIn'] != null
             ? DateFormat('HH:mm').format(item['clockIn'])
             : '-';
+        final clockInLoc = item['clockInLocation']?.toString() ?? '-';
         final clockOutStr = item['clockOut'] != null
             ? DateFormat('HH:mm').format(item['clockOut'])
             : '-';
-        
+        final clockOutLoc = item['clockOutLocation']?.toString() ?? '-';
+
         final isLate = item['status'] == 'late';
         final statusStr = isLate ? 'Terlambat' : 'Tepat Waktu';
-        
+
         final duration = item['duration'] ?? '-';
         final lateMinutesStr = item['lateMinutes']?.toString() ?? '0';
 
@@ -535,7 +688,9 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
           'Absensi',
           statusStr,
           clockInStr,
+          clockInLoc,
           clockOutStr,
+          clockOutLoc,
           duration,
           lateMinutesStr,
           '-',
@@ -545,9 +700,11 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
 
     try {
       String csvData = Csv().encode(rows);
-      
+
       final String userName = user['name'].toString().replaceAll(' ', '_');
-      final fileName = 'Rekap_Absensi_$userName';
+      final fileName =
+          'Rekap_Absensi_$userName'
+          '-${adminC.selectedMonthAdmin.value}  ';
 
       Uint8List bytes = Uint8List.fromList(utf8.encode(csvData));
 
@@ -567,12 +724,17 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
           duration: const Duration(seconds: 6),
           mainButton: TextButton(
             onPressed: () {
-              Share.shareXFiles(
-                [XFile(savedPath)],
-                text: 'Rekap Absensi $userName',
-              );
+              Share.shareXFiles([
+                XFile(savedPath),
+              ], text: 'Rekap Absensi $userName');
             },
-            child: const Text('BAGIKAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'BAGIKAN',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         );
       } else {
@@ -613,7 +775,9 @@ class _InfoCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected ? color.withValues(alpha: 0.05) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: isSelected ? Border.all(color: color, width: 2) : Border.all(color: Colors.transparent, width: 2),
+            border: isSelected
+                ? Border.all(color: color, width: 2)
+                : Border.all(color: Colors.transparent, width: 2),
             boxShadow: [
               if (!isSelected)
                 BoxShadow(
@@ -623,35 +787,35 @@ class _InfoCard extends StatelessWidget {
                 ),
             ],
           ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
+        ),
       ),
-    ),
-  ),
-);
+    );
   }
 }

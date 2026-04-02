@@ -16,6 +16,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _currentIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<AdminController>().loadAll();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final adminC = Get.find<AdminController>();
 
@@ -325,6 +333,43 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 Text(item['clockOut']),
                               ],
                             ),
+                            if (item['clockInLocation'] != '-' || item['clockOutLocation'] != '-') ...[
+                              const SizedBox(height: 8),
+                              if (item['clockInLocation'] != '-')
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.location_on, size: 14, color: Colors.blue.shade400),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        'M: ${item['clockInLocation']}',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              if (item['clockOutLocation'] != '-') ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.location_on, size: 14, color: Colors.purple.shade400),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        'P: ${item['clockOutLocation']}',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ],
                         ),
                       ),
@@ -348,23 +393,66 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             color: Colors.white,
-            child: const Text(
-              'Pengajuan Izin / Cuti',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Pengajuan Izin / Cuti',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4A6CF7),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Obx(() {
+                    final month = adminC.selectedMonthLeaves.value;
+                    final label = DateFormat('MMMM yyyy', 'id_ID').format(month);
+                    final isCurrentMonth = month.month == DateTime.now().month &&
+                        month.year == DateTime.now().year;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          onPressed: adminC.previousLeavesMonth,
+                          icon: const Icon(Icons.chevron_left, color: Colors.white),
+                        ),
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: isCurrentMonth ? null : adminC.nextLeavesMonth,
+                          icon: Icon(
+                            Icons.chevron_right,
+                            color: isCurrentMonth ? Colors.white38 : Colors.white,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              ],
             ),
           ),
           Expanded(
             child: Obx(() {
-              if (adminC.allLeaves.isEmpty) {
+              if (adminC.filteredLeaves.isEmpty) {
                 return const Center(child: Text('Tidak ada data pengajuan.'));
               }
               return RefreshIndicator(
                 onRefresh: adminC.loadAllLeaveRequests,
                 child: ListView.builder(
                   padding: const EdgeInsets.all(20),
-                  itemCount: adminC.allLeaves.length,
+                  itemCount: adminC.filteredLeaves.length,
                   itemBuilder: (context, index) {
-                    final leave = adminC.allLeaves[index];
+                    final leave = adminC.filteredLeaves[index];
                     final isPending = leave['status'] == 'pending';
                     Color statusColor;
                     String statusLabel;

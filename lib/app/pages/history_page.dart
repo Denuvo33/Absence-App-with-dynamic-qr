@@ -133,6 +133,8 @@ class _HistoryCard extends StatelessWidget {
     final dateStr = date != null ? DateFormat('d MMM yyyy', 'id_ID').format(date) : '-';
     final clockInStr = clockIn != null ? DateFormat('HH:mm').format(clockIn) : '--:--';
     final clockOutStr = clockOut != null ? DateFormat('HH:mm').format(clockOut) : '--:--';
+    final clockInLoc = item['clockInLocation']?.toString() ?? '-';
+    final clockOutLoc = item['clockOutLocation']?.toString() ?? '-';
 
     final isLate = status == 'late' && lateMinutes > 0;
 
@@ -260,6 +262,40 @@ class _HistoryCard extends StatelessWidget {
               ),
             ],
           ),
+          
+          if (clockInLoc != '-' || clockOutLoc != '-') ...[
+            const SizedBox(height: 12),
+            if (clockInLoc != '-')
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.location_on, size: 14, color: Colors.blue.shade600),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'Masuk: $clockInLoc',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ),
+                ],
+              ),
+            if (clockOutLoc != '-') ...[
+              const SizedBox(height: 4),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.location_on, size: 14, color: Colors.purple.shade600),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'Pulang: $clockOutLoc',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ],
       ),
     );
