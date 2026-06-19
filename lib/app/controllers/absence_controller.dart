@@ -24,13 +24,19 @@ class AbsenceController extends GetxController {
   final scheduleClockOut = ''.obs; // e.g. "16:00"
   final tolerance = 0.obs; // in minutes
   final isScheduleLoaded = false.obs;
+  final defaultPoints = 60.obs;
 
-  // Today's lateness
+  // Today's lateness & points
   final lateMinutes = 0.obs;
   final isLate = false.obs;
+  final todayPoints = 0.obs;
 
   String get _uid => _auth.currentUser?.uid ?? '';
   String get _todayKey => DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+  // Path helper — attendance now lives under users/{uid}/attendance
+  DatabaseReference get _attendanceRef =>
+      _db.child('users').child(_uid).child('attendance');
 
   @override
   void onReady() {
@@ -47,6 +53,7 @@ class AbsenceController extends GetxController {
     hasClockOut.value = false;
     lateMinutes.value = 0;
     isLate.value = false;
+    todayPoints.value = 0;
     clockInLocationStr.value = '';
     clockOutLocationStr.value = '';
     historyList.clear();
@@ -152,12 +159,15 @@ class AbsenceController extends GetxController {
         scheduleClockIn.value = (data['clockIn'] ?? '07:00').toString();
         scheduleClockOut.value = (data['clockOut'] ?? '16:00').toString();
         tolerance.value = int.tryParse(data['tolerance'].toString()) ?? 10;
+        defaultPoints.value =
+            int.tryParse(data['defaultPoints'].toString()) ?? 60;
         isScheduleLoaded.value = true;
       } else {
         // Default values if not set
         scheduleClockIn.value = '07:00';
         scheduleClockOut.value = '16:00';
         tolerance.value = 10;
+        defaultPoints.value = 60;
         isScheduleLoaded.value = true;
       }
     } catch (e) {
@@ -165,6 +175,7 @@ class AbsenceController extends GetxController {
       scheduleClockIn.value = '07:00';
       scheduleClockOut.value = '16:00';
       tolerance.value = 10;
+      defaultPoints.value = 60;
       isScheduleLoaded.value = true;
     }
   }
@@ -188,7 +199,6 @@ class AbsenceController extends GetxController {
   }
 
   // Check if clock in is allowed right now
-  // Allowed: from 30 minutes before schedule until end of day (if not already clocked in)
   bool get canClockIn {
     if (!isScheduleLoaded.value || hasClockIn.value) return false;
     final scheduleIn = _parseScheduleTime(scheduleClockIn.value);
@@ -198,7 +208,6 @@ class AbsenceController extends GetxController {
   }
 
   // Check if clock out is allowed right now
-  // Allowed: from schedule clock out time onwards
   bool get canClockOut {
     if (!isScheduleLoaded.value || !hasClockIn.value || hasClockOut.value) {
       return false;
@@ -239,11 +248,7 @@ class AbsenceController extends GetxController {
   Future<void> loadTodayAttendance() async {
     if (_uid.isEmpty) return;
     try {
-      final snapshot = await _db
-          .child('attendance')
-          .child(_uid)
-          .child(_todayKey)
-          .get();
+      final snapshot = await _attendanceRef.child(_todayKey).get();
       if (snapshot.exists) {
         final data = snapshot.value as Map<dynamic, dynamic>;
         if (data['clockIn'] != null) {
@@ -274,31 +279,32 @@ class AbsenceController extends GetxController {
           isLate.value = false;
         }
 
+        todayPoints.value = (data['points'] as int?) ?? 0;
         clockInLocationStr.value = data['clockInLocation']?.toString() ?? '';
         clockOutLocationStr.value = data['clockOutLocation']?.toString() ?? '';
       } else {
-        // Reset state for today if no record found (e.g. new day or deleted)
+        // Reset state for today if no record found
         clockInTime.value = null;
         clockOutTime.value = null;
         hasClockIn.value = false;
         hasClockOut.value = false;
         lateMinutes.value = 0;
         isLate.value = false;
+        todayPoints.value = 0;
         clockInLocationStr.value = '';
         clockOutLocationStr.value = '';
       }
 
       // Force refresh on hasClockIn to trigger Obx rebuilds
-      // This ensures getters like canClockOut (which use DateTime.now()) are re-evaluated
       hasClockIn.refresh();
     } catch (e) {
       debugPrint('Error loading attendance: $e');
     }
   }
 
-  // ─── Clock In ──────────────────────────────────────────────
+  // ─── QR-Based Clock In ─────────────────────────────────────
 
-  Future<void> clockIn() async {
+  Future<void> clockInWithQr(String scannedCode) async {
     if (_uid.isEmpty || hasClockIn.value) return;
 
     if (!canClockIn) {
@@ -314,6 +320,33 @@ class AbsenceController extends GetxController {
     }
 
     isLoading.value = true;
+
+    // Validate QR code
+    try {
+      final qrSnapshot = await _db.child('qr_session').get();
+      if (!qrSnapshot.exists) {
+        _showError('Sesi QR tidak aktif. Hubungi admin.');
+        isLoading.value = false;
+        return;
+      }
+      final qrData = qrSnapshot.value as Map<dynamic, dynamic>;
+      if (qrData['active'] != true) {
+        _showError('Sesi QR sudah ditutup.');
+        isLoading.value = false;
+        return;
+      }
+      if (qrData['code'].toString() != scannedCode) {
+        _showError('QR Code tidak valid atau sudah kedaluwarsa.');
+        isLoading.value = false;
+        return;
+      }
+    } catch (e) {
+      _showError('Gagal memvalidasi QR Code.');
+      isLoading.value = false;
+      return;
+    }
+
+    // Get location
     final address = await _getLocationAndAddress();
     if (address == null) {
       isLoading.value = false;
@@ -327,20 +360,24 @@ class AbsenceController extends GetxController {
       final scheduleIn = _parseScheduleTime(scheduleClockIn.value);
       int late = 0;
       String status = 'on_time';
+      int points = defaultPoints.value;
 
       if (scheduleIn != null) {
         final deadlineIn = scheduleIn.add(Duration(minutes: tolerance.value));
         if (now.isAfter(deadlineIn)) {
-          late = now.difference(scheduleIn).inMinutes;
+          // Late minutes counted outside tolerance
+          late = now.difference(deadlineIn).inMinutes;
           status = 'late';
+          points = (defaultPoints.value - late).clamp(0, defaultPoints.value);
         }
       }
 
-      await _db.child('attendance').child(_uid).child(_todayKey).update({
+      await _attendanceRef.child(_todayKey).update({
         'clockIn': now.millisecondsSinceEpoch,
         'date': _todayKey,
         'lateMinutes': late,
         'status': status,
+        'points': points,
         'clockInLocation': address,
       });
 
@@ -349,35 +386,31 @@ class AbsenceController extends GetxController {
       clockInLocationStr.value = address;
       lateMinutes.value = late;
       isLate.value = late > 0;
+      todayPoints.value = points;
+
+      // Regenerate QR code after successful scan
+      await _regenerateQrCode();
 
       final lateStr = late > 0 ? ' (Telat $late menit)' : '';
       Get.snackbar(
         'Clock In Berhasil',
-        'Absen masuk pukul ${DateFormat("HH:mm").format(now)}$lateStr',
+        'Absen masuk pukul ${DateFormat("HH:mm").format(now)}$lateStr\nPoin: $points',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: late > 0
-            ? Colors.orange.shade600
-            : Colors.green.shade600,
+        backgroundColor:
+            late > 0 ? Colors.orange.shade600 : Colors.green.shade600,
         colorText: Colors.white,
         margin: const EdgeInsets.all(16),
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal melakukan clock in.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      _showError('Gagal melakukan clock in.');
     } finally {
       isLoading.value = false;
     }
   }
 
-  // ─── Clock Out ─────────────────────────────────────────────
+  // ─── QR-Based Clock Out ────────────────────────────────────
 
-  Future<void> clockOut() async {
+  Future<void> clockOutWithQr(String scannedCode) async {
     if (_uid.isEmpty || !hasClockIn.value || hasClockOut.value) return;
 
     if (!canClockOut) {
@@ -393,16 +426,43 @@ class AbsenceController extends GetxController {
     }
 
     isLoading.value = true;
+
+    // Validate QR code
+    try {
+      final qrSnapshot = await _db.child('qr_session').get();
+      if (!qrSnapshot.exists) {
+        _showError('Sesi QR tidak aktif. Hubungi admin.');
+        isLoading.value = false;
+        return;
+      }
+      final qrData = qrSnapshot.value as Map<dynamic, dynamic>;
+      if (qrData['active'] != true) {
+        _showError('Sesi QR sudah ditutup.');
+        isLoading.value = false;
+        return;
+      }
+      if (qrData['code'].toString() != scannedCode) {
+        _showError('QR Code tidak valid atau sudah kedaluwarsa.');
+        isLoading.value = false;
+        return;
+      }
+    } catch (e) {
+      _showError('Gagal memvalidasi QR Code.');
+      isLoading.value = false;
+      return;
+    }
+
+    // Get location
     final address = await _getLocationAndAddress();
     if (address == null) {
       isLoading.value = false;
-      return; // Berhenti jika lokasi gagal diset
+      return;
     }
 
     try {
       final now = DateTime.now();
 
-      await _db.child('attendance').child(_uid).child(_todayKey).update({
+      await _attendanceRef.child(_todayKey).update({
         'clockOut': now.millisecondsSinceEpoch,
         'clockOutLocation': address,
       });
@@ -410,6 +470,9 @@ class AbsenceController extends GetxController {
       clockOutTime.value = now;
       hasClockOut.value = true;
       clockOutLocationStr.value = address;
+
+      // Regenerate QR code after successful scan
+      await _regenerateQrCode();
 
       Get.snackbar(
         'Clock Out Berhasil',
@@ -420,17 +483,35 @@ class AbsenceController extends GetxController {
         margin: const EdgeInsets.all(16),
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal melakukan clock out.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      _showError('Gagal melakukan clock out.');
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Regenerate QR code in RTDB
+  Future<void> _regenerateQrCode() async {
+    try {
+      final newCode =
+          '${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
+      await _db.child('qr_session').update({
+        'code': newCode,
+        'updatedAt': ServerValue.timestamp,
+      });
+    } catch (e) {
+      debugPrint('Error regenerating QR: $e');
+    }
+  }
+
+  void _showError(String message) {
+    Get.snackbar(
+      'Error',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red.shade600,
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(16),
+    );
   }
 
   // ─── Helpers ───────────────────────────────────────────────
@@ -467,7 +548,7 @@ class AbsenceController extends GetxController {
     if (_uid.isEmpty) return;
     try {
       isHistoryLoading.value = true;
-      final snapshot = await _db.child('attendance').child(_uid).get();
+      final snapshot = await _attendanceRef.get();
       if (!snapshot.exists) {
         historyList.clear();
         return;
@@ -486,6 +567,7 @@ class AbsenceController extends GetxController {
               : null;
           final late = value['lateMinutes'] as int? ?? 0;
           final status = value['status']?.toString() ?? 'on_time';
+          final points = value['points'] as int? ?? 0;
 
           String duration = '-';
           if (clockIn != null) {
@@ -506,6 +588,7 @@ class AbsenceController extends GetxController {
             'isComplete': clockIn != null && clockOut != null,
             'lateMinutes': late,
             'status': status,
+            'points': points,
             'clockInLocation': value['clockInLocation']?.toString() ?? '-',
             'clockOutLocation': value['clockOutLocation']?.toString() ?? '-',
           });

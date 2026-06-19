@@ -19,11 +19,7 @@ class AuthController extends GetxController {
   final userEmail = ''.obs;
   final userRole = ''.obs;
 
-  // Flag to prevent auto-navigation during registration
-  bool _isRegistering = false;
-
   // Text controllers
-  final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -55,9 +51,7 @@ class AuthController extends GetxController {
     // Listen for subsequent auth state changes
     _authSub = _auth.authStateChanges().skip(1).listen((user) {
       if (user != null) {
-        if (!_isRegistering) {
-          _loadUserDataAndNavigate();
-        }
+        _loadUserDataAndNavigate();
       } else {
         userName.value = '';
         userEmail.value = '';
@@ -93,15 +87,14 @@ class AuthController extends GetxController {
     }
 
     // Navigate based on role
-    final absenceC = Get.find<AbsenceController>();
-    absenceC.resetState();
-    absenceC.loadSchedule();
-    absenceC.loadTodayAttendance();
-
     if (userRole.value == 'admin') {
       Get.find<AdminController>().loadAll();
       Get.offAllNamed(AppRoutes.admin);
     } else {
+      final absenceC = Get.find<AbsenceController>();
+      absenceC.resetState();
+      absenceC.loadSchedule();
+      absenceC.loadTodayAttendance();
       Get.offAllNamed(AppRoutes.home);
     }
   }
@@ -114,65 +107,6 @@ class AuthController extends GetxController {
   // Reset password visibility when navigating
   void resetPasswordVisibility() {
     isPasswordHidden.value = true;
-  }
-
-  // Register
-  Future<void> register(GlobalKey<FormState> formKey) async {
-    if (!formKey.currentState!.validate()) return;
-
-    try {
-      isLoading.value = true;
-      _isRegistering = true;
-
-      final name = nameController.text.trim();
-      final email = emailController.text.trim();
-
-      // Create user
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: passwordController.text.trim(),
-      );
-
-      // Update display name
-      await credential.user?.updateDisplayName(name);
-      await credential.user?.reload();
-
-      // Save user data to Realtime Database WITH role
-      await _db.child('users').child(credential.user!.uid).set({
-        'name': name,
-        'email': email,
-        'role': 'user',
-        'createdAt': ServerValue.timestamp,
-      });
-
-      // Set reactive user data directly
-      userName.value = name;
-      userEmail.value = email;
-      userRole.value = 'user';
-
-      _clearFields();
-      _isRegistering = false;
-
-      // Always navigate to home for new registrations (they're always users)
-      Get.offAllNamed(AppRoutes.home);
-
-      Get.snackbar(
-        'Berhasil',
-        'Akun berhasil dibuat!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade600,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
-    } on FirebaseAuthException catch (e) {
-      _isRegistering = false;
-      _showError(_getAuthErrorMessage(e.code));
-    } catch (e) {
-      _isRegistering = false;
-      _showError('Terjadi kesalahan. Silakan coba lagi.');
-    } finally {
-      isLoading.value = false;
-    }
   }
 
   // Login
@@ -205,7 +139,6 @@ class AuthController extends GetxController {
 
   // Clear text fields
   void _clearFields() {
-    nameController.clear();
     emailController.clear();
     passwordController.clear();
   }
@@ -247,7 +180,6 @@ class AuthController extends GetxController {
   @override
   void onClose() {
     _authSub?.cancel();
-    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.onClose();

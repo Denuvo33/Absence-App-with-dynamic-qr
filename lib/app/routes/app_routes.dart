@@ -1,6 +1,5 @@
 class AppRoutes {
   static const login = '/login';
-  static const register = '/register';
   static const home = '/home';
   static const history = '/history';
   static const dashboard = '/dashboard';
@@ -8,4 +7,5 @@ class AppRoutes {
   static const admin = '/admin';
   static const adminUsers = '/admin/users';
   static const adminUserDetail = '/admin/user-detail';
+  static const scanQr = '/scan-qr';
 }

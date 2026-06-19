@@ -7,7 +7,6 @@ import 'firebase_options.dart';
 import 'app/routes/app_routes.dart';
 import 'app/bindings/app_bindings.dart';
 import 'app/pages/login_page.dart';
-import 'app/pages/register_page.dart';
 import 'app/pages/home_page.dart';
 import 'app/pages/history_page.dart';
 import 'app/pages/dashboard_page.dart';
@@ -15,6 +14,7 @@ import 'app/pages/leave_page.dart';
 import 'app/pages/admin_dashboard_page.dart';
 import 'app/pages/admin_users_page.dart';
 import 'app/pages/admin_user_detail_page.dart';
+import 'app/pages/scan_qr_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +40,6 @@ class MyApp extends StatelessWidget {
       initialRoute: AppRoutes.login,
       getPages: [
         GetPage(name: AppRoutes.login, page: () => LoginPage()),
-        GetPage(name: AppRoutes.register, page: () => RegisterPage()),
         GetPage(name: AppRoutes.home, page: () => const HomePage()),
         GetPage(name: AppRoutes.history, page: () => const HistoryPage()),
         GetPage(name: AppRoutes.dashboard, page: () => const DashboardPage()),
@@ -51,6 +50,7 @@ class MyApp extends StatelessWidget {
           name: AppRoutes.adminUserDetail,
           page: () => const AdminUserDetailPage(),
         ),
+        GetPage(name: AppRoutes.scanQr, page: () => const ScanQrPage()),
       ],
     );
   }

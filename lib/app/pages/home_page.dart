@@ -18,6 +18,14 @@ class HomePage extends StatelessWidget {
     ).format(DateTime.now());
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        onPressed: () {
+          Get.toNamed(AppRoutes.scanQr);
+        },
+        child: Icon(Icons.qr_code_2_rounded),
+      ),
       backgroundColor: const Color(0xFFF5F7FA),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -359,7 +367,7 @@ class HomePage extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                // ─── Clock In / Out Button ─────────────────────
+                // ─── Scan QR Button ─────────────────────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Obx(() {
@@ -412,11 +420,9 @@ class HomePage extends StatelessWidget {
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton.icon(
-                            onPressed: loading
+                            onPressed: loading || !canAction
                                 ? null
-                                : (hasIn
-                                      ? absenceC.clockOut
-                                      : absenceC.clockIn),
+                                : () => Get.toNamed(AppRoutes.scanQr),
                             icon: loading
                                 ? const SizedBox(
                                     height: 22,
@@ -426,17 +432,15 @@ class HomePage extends StatelessWidget {
                                       strokeWidth: 2.5,
                                     ),
                                   )
-                                : Icon(
-                                    hasIn
-                                        ? Icons.logout_rounded
-                                        : Icons.login_rounded,
-                                  ),
+                                : const Icon(Icons.qr_code_scanner_rounded),
                             label: Text(
                               loading
                                   ? 'Memproses...'
-                                  : (hasIn ? 'Clock Out' : 'Clock In'),
+                                  : (hasIn
+                                        ? 'Scan QR untuk Clock Out'
+                                        : 'Scan QR untuk Clock In'),
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

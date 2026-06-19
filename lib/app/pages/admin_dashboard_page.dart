@@ -2,6 +2,7 @@ import 'package:absence/app/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../controllers/admin_controller.dart';
 import '../controllers/auth_controller.dart';
 
@@ -29,7 +30,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
     final pages = [
       _buildHomeTab(context, adminC),
+      _buildQrTab(context, adminC),
       _buildLeavesTab(context, adminC),
+      _buildUsersTab(context, adminC),
       _buildSettingsTab(context, adminC),
     ];
 
@@ -44,16 +47,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
+        type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xFF4A6CF7),
         unselectedItemColor: Colors.grey,
+        selectedFontSize: 11,
+        unselectedFontSize: 10,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.qr_code_rounded),
+            label: 'QR Absensi',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.fact_check),
             label: 'Pengajuan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people_alt_rounded),
+            label: 'Kelola User',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
@@ -63,6 +77,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
     );
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB 1: DASHBOARD
+  // ═══════════════════════════════════════════════════════════
 
   Widget _buildHomeTab(BuildContext context, AdminController adminC) {
     final today = DateFormat(
@@ -130,7 +148,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
               const SizedBox(height: 24),
 
-              // Obx Stats
+              // Stats
               Obx(
                 () => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -229,6 +247,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     final item = adminC.todayAttendance[index];
                     final isLate = item['lateMinutes'] > 0;
                     final isHadir = item['status'] != 'belum';
+                    final points = item['points'] ?? 0;
 
                     return InkWell(
                       onTap: () {
@@ -260,13 +279,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  item['name'],
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                Expanded(
+                                  child: Text(
+                                    item['name'],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                const SizedBox(width: 8),
                                 if (isHadir)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -331,6 +354,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(item['clockOut']),
+                                if (isHadir) ...[
+                                  const Spacer(),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF3E0),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '$points poin',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.orange.shade800,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                             if (item['clockInLocation'] != '-' ||
@@ -399,6 +443,237 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
     );
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB 2: QR ABSENSI
+  // ═══════════════════════════════════════════════════════════
+
+  Widget _buildQrTab(BuildContext context, AdminController adminC) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'QR Code Absensi',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Generate QR untuk absensi karyawan',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            Obx(() {
+              if (!adminC.isQrActive.value) {
+                // Show generate button
+                return Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(40),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.qr_code_2_rounded,
+                            size: 80,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Belum ada sesi QR aktif',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: adminC.startQrSession,
+                        icon: const Icon(Icons.qr_code_rounded),
+                        label: const Text(
+                          'Generate QR',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4A6CF7),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 3,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              // Show active QR
+              return Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        // Status badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.green.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade500,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Sesi QR Aktif',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // QR Code
+                        QrImageView(
+                          data: adminC.qrCode.value,
+                          version: QrVersions.auto,
+                          size: 250,
+                          backgroundColor: Colors.white,
+                          eyeStyle: const QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: Color(0xFF4A6CF7),
+                          ),
+                          dataModuleStyle: const QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: Color(0xFF2D3436),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Info text
+                        Text(
+                          'QR berubah otomatis setiap scan',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Stop button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showStopQrDialog(adminC),
+                      icon: const Icon(Icons.stop_circle_rounded),
+                      label: const Text(
+                        'Tutup Sesi QR',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade600,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 3,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showStopQrDialog(AdminController adminC) {
+    Get.defaultDialog(
+      title: 'Tutup Sesi QR',
+      middleText:
+          'QR Code akan dinonaktifkan dan tidak bisa di-scan lagi. Lanjutkan?',
+      textCancel: 'Batal',
+      textConfirm: 'Tutup',
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.red.shade600,
+      onConfirm: () {
+        Get.back();
+        adminC.stopQrSession();
+      },
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB 3: PENGAJUAN (LEAVES)
+  // ═══════════════════════════════════════════════════════════
 
   Widget _buildLeavesTab(BuildContext context, AdminController adminC) {
     return SafeArea(
@@ -595,7 +870,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                     ),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.red,
-                                      side: const BorderSide(color: Colors.red),
+                                      side:
+                                          const BorderSide(color: Colors.red),
                                     ),
                                     child: const Text('Tolak'),
                                   ),
@@ -631,11 +907,486 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // TAB 4: KELOLA USER
+  // ═══════════════════════════════════════════════════════════
+
+  Widget _buildUsersTab(BuildContext context, AdminController adminC) {
+    final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final pwCtrl = TextEditingController();
+    final asalCtrl = TextEditingController();
+    final divisiCtrl = TextEditingController();
+    final selectedDivisi = ''.obs;
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Kelola User',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Buat akun user dan kelola divisi',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ─── Manage Divisi Section ───────────────────────
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Manage Divisi',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: divisiCtrl,
+                          decoration: InputDecoration(
+                            hintText: 'Nama divisi baru',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (divisiCtrl.text.trim().isNotEmpty) {
+                            adminC.addDivision(divisiCtrl.text.trim());
+                            divisiCtrl.clear();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4A6CF7),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                        ),
+                        child: const Icon(Icons.add),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Obx(() {
+                    if (adminC.divisionsList.isEmpty) {
+                      return Text(
+                        'Belum ada divisi. Tambahkan di atas.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade500,
+                        ),
+                      );
+                    }
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: adminC.divisionsList.map((div) {
+                        return Chip(
+                          label: Text(div['name'] ?? ''),
+                          deleteIcon: const Icon(Icons.close, size: 16),
+                          onDeleted: () => adminC.deleteDivision(div['id']!),
+                          backgroundColor: const Color(0xFFE8EAF6),
+                          labelStyle: const TextStyle(
+                            color: Color(0xFF4A6CF7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  }),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ─── Create User Form ────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Buat Akun User Baru',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Nama Lengkap',
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: pwCtrl,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Divisi dropdown
+                  Obx(() {
+                    final divisions = adminC.divisionsList;
+                    if (divisions.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Tambahkan divisi terlebih dahulu',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      );
+                    }
+                    return Obx(() => DropdownButtonFormField<String>(
+                          initialValue: selectedDivisi.value.isEmpty
+                              ? null
+                              : selectedDivisi.value,
+                          decoration: InputDecoration(
+                            labelText: 'Divisi',
+                            prefixIcon:
+                                const Icon(Icons.business_center_outlined),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          items: divisions.map((div) {
+                            return DropdownMenuItem(
+                              value: div['name'],
+                              child: Text(div['name'] ?? ''),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            selectedDivisi.value = val ?? '';
+                          },
+                        ));
+                  }),
+                  const SizedBox(height: 12),
+
+                  // Asal with autocomplete
+                  Obx(() {
+                    final suggestions = adminC.asalSuggestions.toList();
+                    return Autocomplete<String>(
+                      optionsBuilder: (textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return suggestions;
+                        }
+                        return suggestions.where((s) => s
+                            .toLowerCase()
+                            .contains(
+                                textEditingValue.text.toLowerCase()));
+                      },
+                      onSelected: (val) {
+                        asalCtrl.text = val;
+                      },
+                      fieldViewBuilder: (context, controller, focusNode,
+                          onEditingComplete) {
+                        // Sync the autocomplete controller with asalCtrl
+                        asalCtrl.addListener(() {
+                          if (controller.text != asalCtrl.text) {
+                            controller.text = asalCtrl.text;
+                          }
+                        });
+                        return TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          onEditingComplete: onEditingComplete,
+                          onChanged: (val) => asalCtrl.text = val,
+                          decoration: InputDecoration(
+                            labelText: 'Asal (Instansi/Sekolah)',
+                            prefixIcon:
+                                const Icon(Icons.location_city_outlined),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
+
+                  const SizedBox(height: 20),
+
+                  Obx(() => SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: adminC.isCreatingUser.value
+                              ? null
+                              : () {
+                                  adminC.createUser(
+                                    name: nameCtrl.text,
+                                    email: emailCtrl.text,
+                                    password: pwCtrl.text,
+                                    divisi: selectedDivisi.value,
+                                    asal: asalCtrl.text,
+                                  );
+                                  // Clear form on success
+                                  nameCtrl.clear();
+                                  emailCtrl.clear();
+                                  pwCtrl.clear();
+                                  asalCtrl.clear();
+                                  selectedDivisi.value = '';
+                                },
+                          icon: adminC.isCreatingUser.value
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.person_add),
+                          label: Text(
+                            adminC.isCreatingUser.value
+                                ? 'Membuat...'
+                                : 'Buat Akun',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4A6CF7),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      )),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ─── User List ───────────────────────────────────
+            const Text(
+              'Daftar User',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Obx(() {
+              final users = adminC.allUsers
+                  .where((u) => u['role'] != 'admin')
+                  .toList();
+              if (users.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(
+                    child: Text('Belum ada user terdaftar.'),
+                  ),
+                );
+              }
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: InkWell(
+                      onTap: () => Get.toNamed(
+                        AppRoutes.adminUserDetail,
+                        arguments: user['uid'],
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundColor: const Color(0xFFE8EAF6),
+                            child: Text(
+                              (user['name'] as String).isNotEmpty
+                                  ? user['name'][0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF4A6CF7),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user['name'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${user['email']}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8EAF6),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  user['divisi'] ?? '-',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFF4A6CF7),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                user['asal'] ?? '-',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB 5: PENGATURAN
+  // ═══════════════════════════════════════════════════════════
+
   Widget _buildSettingsTab(BuildContext context, AdminController adminC) {
     final cinCtrl = TextEditingController(text: adminC.scheduleClockIn.value);
     final coutCtrl = TextEditingController(text: adminC.scheduleClockOut.value);
     final tolCtrl = TextEditingController(
       text: adminC.tolerance.value.toString(),
+    );
+    final pointsCtrl = TextEditingController(
+      text: adminC.defaultPoints.value.toString(),
     );
 
     // ignore: no_leading_underscores_for_local_identifiers
@@ -679,7 +1430,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Pengaturan Jadwal',
+              'Pengaturan',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
@@ -697,7 +1448,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ],
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Text(
+                    'Jadwal & Absensi',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: cinCtrl,
                     readOnly: true,
@@ -731,6 +1491,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: pointsCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Poin Default Absensi',
+                      hintText: '60',
+                      prefixIcon: Icon(Icons.stars_rounded),
+                      border: OutlineInputBorder(),
+                      helperText:
+                          'Poin dikurangi per menit keterlambatan (di luar toleransi)',
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
@@ -741,6 +1514,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           cinCtrl.text.trim(),
                           coutCtrl.text.trim(),
                           int.tryParse(tolCtrl.text.trim()) ?? 10,
+                          int.tryParse(pointsCtrl.text.trim()) ?? 60,
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -758,6 +1532,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
     );
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // DIALOGS
+  // ═══════════════════════════════════════════════════════════
 
   void _showLogoutDialog(AuthController authC) {
     Get.defaultDialog(

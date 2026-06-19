@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../routes/app_routes.dart';
 
 class LoginPage extends GetView<AuthController> {
   LoginPage({super.key});
@@ -149,31 +148,7 @@ class LoginPage extends GetView<AuthController> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
 
-                      // Register link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Belum punya akun? ',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              controller.resetPasswordVisibility();
-                              Get.toNamed(AppRoutes.register);
-                            },
-                            child: const Text(
-                              'Daftar',
-                              style: TextStyle(
-                                color: Color(0xFF4A6CF7),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
