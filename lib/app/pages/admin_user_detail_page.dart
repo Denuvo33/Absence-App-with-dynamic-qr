@@ -38,7 +38,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
-          'Detail Karyawan',
+          'Detail Anak Magang',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -473,7 +473,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                           ),
                         ),
                         child: Text(
-                          'Logbook Karyawan',
+                          'Logbook Anak Magang',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -961,7 +961,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     final selectedDivisi = (user['divisi'] ?? '').toString().obs;
 
     Get.defaultDialog(
-      title: 'Edit Profil Karyawan',
+      title: 'Edit Profil Anak Magang',
       content: SingleChildScrollView(
         child: Column(
           children: [
@@ -1043,7 +1043,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
 
   void _showDeleteUserDialog(Map<String, dynamic> user) {
     Get.defaultDialog(
-      title: 'Hapus Karyawan',
+      title: 'Hapus Anak Magang',
       middleText:
           'Apakah Anda yakin ingin menghapus akun "${user['name']}"? Semua data di database akan hilang dan aksi ini tidak bisa dibatalkan.',
       textConfirm: 'Hapus',
@@ -1177,7 +1177,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('REKAPITULASI LOGBOOK KARYAWAN',
+                  pw.Text('REKAPITULASI LOGBOOK ANAK MAGANG',
                       style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
                   pw.Text(monthName, style: const pw.TextStyle(fontSize: 10)),
                 ],
@@ -1320,7 +1320,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     List<List<dynamic>> rows = [];
 
     // Header Laporan
-    rows.add(['LAPORAN ABSENSI KARYAWAN']);
+    rows.add(['LAPORAN ABSENSI ANAK MAGANG']);
     rows.add([]);
 
     // Profil

@@ -19,6 +19,7 @@ class AdminController extends GetxController {
   // Data lists
   final allUsers = <Map<String, dynamic>>[].obs;
   final todayAttendance = <Map<String, dynamic>>[].obs;
+  final todayLogbooks = <Map<String, dynamic>>[].obs;
   final pendingLeaves = <Map<String, dynamic>>[].obs;
   final allLeaves = <Map<String, dynamic>>[].obs;
 
@@ -57,6 +58,7 @@ class AdminController extends GetxController {
       loadSchedule(),
       loadAllUsers(),
       loadTodayAttendance(),
+      loadTodayLogbooks(),
       loadAllLeaveRequests(),
       loadDivisions(),
       loadAsalSuggestions(),
@@ -502,6 +504,54 @@ class AdminController extends GetxController {
     }
   }
 
+  Future<void> loadTodayLogbooks() async {
+    try {
+      final usersSnapshot = await _db.child('users').get();
+      if (!usersSnapshot.exists) return;
+
+      final users = usersSnapshot.value as Map<dynamic, dynamic>;
+      final list = <Map<String, dynamic>>[];
+      final today = DateTime.now();
+
+      for (final entry in users.entries) {
+        final uid = entry.key.toString();
+        final userData = entry.value as Map<dynamic, dynamic>;
+        final role = userData['role']?.toString() ?? 'user';
+        if (role == 'admin') continue;
+
+        // Fetch logbooks
+        final logSnap = await _db.child('users').child(uid).child('logbook').get();
+        if (logSnap.exists) {
+          final logData = logSnap.value as Map<dynamic, dynamic>;
+          logData.forEach((key, value) {
+            if (value is Map) {
+              final createdAt = value['createdAt'] as int? ?? 0;
+              if (createdAt > 0) {
+                final date = DateTime.fromMillisecondsSinceEpoch(createdAt);
+                if (date.year == today.year && date.month == today.month && date.day == today.day) {
+                  list.add({
+                    'id': key.toString(),
+                    'uid': uid,
+                    'userName': userData['name']?.toString() ?? '',
+                    'content': value['content']?.toString() ?? '',
+                    'divisi': value['divisi']?.toString() ?? '-',
+                    'points': value['points'] as int? ?? 0,
+                    'createdAt': createdAt,
+                  });
+                }
+              }
+            }
+          });
+        }
+      }
+
+      list.sort((a, b) => (b['createdAt'] as int).compareTo(a['createdAt'] as int));
+      todayLogbooks.assignAll(list);
+    } catch (e) {
+      debugPrint('Error loading today logbooks: $e');
+    }
+  }
+
   // ─── Leave Requests ────────────────────────────────────────
 
   final selectedMonthLeaves = DateTime.now().obs;
@@ -883,7 +933,7 @@ class AdminController extends GetxController {
       await loadAllUsers();
       Get.snackbar(
         'Berhasil',
-        'Profil karyawan berhasil diperbarui!',
+        'Profil anak magang berhasil diperbarui!',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.shade600,
         colorText: Colors.white,
@@ -933,7 +983,7 @@ class AdminController extends GetxController {
       await loadAllUsers();
       Get.snackbar(
         'Berhasil',
-        'Karyawan berhasil dihapus!',
+        'Anak magang berhasil dihapus!',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.shade600,
         colorText: Colors.white,
@@ -942,7 +992,7 @@ class AdminController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Gagal menghapus karyawan: $e',
+        'Gagal menghapus anak magang: $e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.shade600,
         colorText: Colors.white,

@@ -156,7 +156,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     children: [
                       Expanded(
                         child: _StatCard(
-                          title: 'Total Karyawan',
+                          title: 'Total Anak Magang',
                           value: '${adminC.totalUsers.value}',
                           icon: Icons.people_alt,
                           color: const Color(0xFF4A6CF7),
@@ -436,6 +436,134 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   },
                 );
               }),
+              const SizedBox(height: 24),
+              // Today's Logbook List
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Logbook Hari Ini',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: adminC.loadTodayLogbooks,
+                      child: const Text('Refresh'),
+                    ),
+                  ],
+                ),
+              ),
+              Obx(() {
+                if (adminC.todayLogbooks.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Center(
+                      child: Text('Belum ada logbook hari ini.'),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: adminC.todayLogbooks.length,
+                  itemBuilder: (context, index) {
+                    final item = adminC.todayLogbooks[index];
+                    final time = DateFormat('HH:mm').format(
+                      DateTime.fromMillisecondsSinceEpoch(item['createdAt'] as int),
+                    );
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                item['userName'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              Text(
+                                time,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            item['content'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8EAF6),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  item['divisi'] ?? '-',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFF4A6CF7),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF3E0),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '${item['points']} Poin',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.orange.shade800,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }),
               const SizedBox(height: 32),
             ],
           ),
@@ -465,7 +593,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Generate QR untuk absensi karyawan',
+              'Generate QR untuk absensi anak magang',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -1650,7 +1778,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final selectedDivisi = (user['divisi'] ?? '').toString().obs;
 
     Get.defaultDialog(
-      title: 'Edit Profil Karyawan',
+      title: 'Edit Profil Anak Magang',
       content: SingleChildScrollView(
         child: Column(
           children: [
@@ -1732,7 +1860,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   void _showDeleteUserDialog(BuildContext context, AdminController adminC, Map<String, dynamic> user) {
     Get.defaultDialog(
-      title: 'Hapus Karyawan',
+      title: 'Hapus Anak Magang',
       middleText:
           'Apakah Anda yakin ingin menghapus akun "${user['name']}"? Semua data di database akan hilang dan aksi ini tidak bisa dibatalkan.',
       textConfirm: 'Hapus',
