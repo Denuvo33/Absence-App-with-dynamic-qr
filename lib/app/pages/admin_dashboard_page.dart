@@ -1388,6 +1388,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final pointsCtrl = TextEditingController(
       text: adminC.defaultPoints.value.toString(),
     );
+    final logbookPointsCtrl = TextEditingController(
+      text: adminC.defaultLogbookPoints.value.toString(),
+    );
 
     // ignore: no_leading_underscores_for_local_identifiers
     Future<void> _selectTime(
@@ -1504,6 +1507,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           'Poin dikurangi per menit keterlambatan (di luar toleransi)',
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: logbookPointsCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Poin Default Logbook',
+                      hintText: '60',
+                      prefixIcon: Icon(Icons.book_rounded),
+                      border: OutlineInputBorder(),
+                      helperText:
+                          'Poin yang diberikan setiap user mengirim logbook',
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
@@ -1515,6 +1531,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           coutCtrl.text.trim(),
                           int.tryParse(tolCtrl.text.trim()) ?? 10,
                           int.tryParse(pointsCtrl.text.trim()) ?? 60,
+                          int.tryParse(logbookPointsCtrl.text.trim()) ?? 60,
                         );
                       },
                       style: ElevatedButton.styleFrom(

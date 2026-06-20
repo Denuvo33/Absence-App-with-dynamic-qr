@@ -25,6 +25,7 @@ class AbsenceController extends GetxController {
   final tolerance = 0.obs; // in minutes
   final isScheduleLoaded = false.obs;
   final defaultPoints = 60.obs;
+  final defaultLogbookPoints = 60.obs;
 
   // Today's lateness & points
   final lateMinutes = 0.obs;
@@ -57,6 +58,7 @@ class AbsenceController extends GetxController {
     clockInLocationStr.value = '';
     clockOutLocationStr.value = '';
     historyList.clear();
+    logbookList.clear();
     isLoading.value = false;
   }
 
@@ -161,6 +163,8 @@ class AbsenceController extends GetxController {
         tolerance.value = int.tryParse(data['tolerance'].toString()) ?? 10;
         defaultPoints.value =
             int.tryParse(data['defaultPoints'].toString()) ?? 60;
+        defaultLogbookPoints.value =
+            int.tryParse(data['defaultLogbookPoints'].toString()) ?? 60;
         isScheduleLoaded.value = true;
       } else {
         // Default values if not set
@@ -168,6 +172,7 @@ class AbsenceController extends GetxController {
         scheduleClockOut.value = '16:00';
         tolerance.value = 10;
         defaultPoints.value = 60;
+        defaultLogbookPoints.value = 60;
         isScheduleLoaded.value = true;
       }
     } catch (e) {
@@ -176,6 +181,7 @@ class AbsenceController extends GetxController {
       scheduleClockOut.value = '16:00';
       tolerance.value = 10;
       defaultPoints.value = 60;
+      defaultLogbookPoints.value = 60;
       isScheduleLoaded.value = true;
     }
   }
@@ -622,6 +628,128 @@ class AbsenceController extends GetxController {
     );
     if (next.isBefore(DateTime(now.year, now.month + 1))) {
       selectedMonth.value = next;
+    }
+  }
+
+  // ─── Logbook ───────────────────────────────────────────────
+
+  final logbookList = <Map<String, dynamic>>[].obs;
+  final isLogbookLoading = false.obs;
+
+  // Path helper for logbook
+  DatabaseReference get _logbookRef =>
+      _db.child('users').child(_uid).child('logbook');
+
+  Future<void> loadLogbook() async {
+    if (_uid.isEmpty) return;
+    try {
+      isLogbookLoading.value = true;
+      final snapshot = await _logbookRef.get();
+      if (!snapshot.exists) {
+        logbookList.clear();
+        return;
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      final list = <Map<String, dynamic>>[];
+
+      data.forEach((key, value) {
+        if (value is Map) {
+          list.add({
+            'id': key.toString(),
+            'content': value['content']?.toString() ?? '',
+            'divisi': value['divisi']?.toString() ?? '-',
+            'points': value['points'] as int? ?? 0,
+            'createdAt': value['createdAt'] as int? ?? 0,
+            'updatedAt': value['updatedAt'] as int? ?? 0,
+          });
+        }
+      });
+
+      // Sort by newest first
+      list.sort((a, b) => (b['createdAt'] as int).compareTo(a['createdAt'] as int));
+
+      logbookList.assignAll(list);
+    } catch (e) {
+      debugPrint('Error loading logbook: $e');
+    } finally {
+      isLogbookLoading.value = false;
+    }
+  }
+
+  Future<void> createLogbook(String content, String divisi) async {
+    if (_uid.isEmpty || content.trim().isEmpty) return;
+    try {
+      isLoading.value = true;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await _logbookRef.push().set({
+        'content': content.trim(),
+        'divisi': divisi,
+        'points': defaultLogbookPoints.value,
+        'createdAt': now,
+        'updatedAt': now,
+      });
+
+      Get.snackbar(
+        'Berhasil',
+        'Logbook berhasil ditambahkan!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+
+      await loadLogbook();
+    } catch (e) {
+      _showError('Gagal menambahkan logbook.');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateLogbook(String id, String content) async {
+    if (_uid.isEmpty || content.trim().isEmpty) return;
+    try {
+      isLoading.value = true;
+      await _logbookRef.child(id).update({
+        'content': content.trim(),
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+
+      Get.snackbar(
+        'Berhasil',
+        'Logbook berhasil diperbarui!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+
+      await loadLogbook();
+    } catch (e) {
+      _showError('Gagal memperbarui logbook.');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteLogbook(String id) async {
+    if (_uid.isEmpty) return;
+    try {
+      await _logbookRef.child(id).remove();
+
+      Get.snackbar(
+        'Berhasil',
+        'Logbook berhasil dihapus.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+
+      await loadLogbook();
+    } catch (e) {
+      _showError('Gagal menghapus logbook.');
     }
   }
 }

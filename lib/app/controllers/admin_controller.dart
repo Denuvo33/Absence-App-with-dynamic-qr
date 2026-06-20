@@ -14,6 +14,7 @@ class AdminController extends GetxController {
   final scheduleClockOut = '16:00'.obs;
   final tolerance = 10.obs;
   final defaultPoints = 60.obs;
+  final defaultLogbookPoints = 60.obs;
 
   // Data lists
   final allUsers = <Map<String, dynamic>>[].obs;
@@ -77,6 +78,8 @@ class AdminController extends GetxController {
         tolerance.value = int.tryParse(data['tolerance'].toString()) ?? 10;
         defaultPoints.value =
             int.tryParse(data['defaultPoints'].toString()) ?? 60;
+        defaultLogbookPoints.value =
+            int.tryParse(data['defaultLogbookPoints'].toString()) ?? 60;
       }
     } catch (e) {
       debugPrint('Error loading schedule: $e');
@@ -84,18 +87,20 @@ class AdminController extends GetxController {
   }
 
   Future<void> updateSchedule(
-      String clockIn, String clockOut, int tol, int points) async {
+      String clockIn, String clockOut, int tol, int points, int logbookPoints) async {
     try {
       await _db.child('absence').set({
         'clockIn': clockIn,
         'clockOut': clockOut,
         'tolerance': tol,
         'defaultPoints': points,
+        'defaultLogbookPoints': logbookPoints,
       });
       scheduleClockIn.value = clockIn;
       scheduleClockOut.value = clockOut;
       tolerance.value = tol;
       defaultPoints.value = points;
+      defaultLogbookPoints.value = logbookPoints;
 
       Get.snackbar(
         'Berhasil',

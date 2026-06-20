@@ -18,6 +18,7 @@ class AuthController extends GetxController {
   final userName = ''.obs;
   final userEmail = ''.obs;
   final userRole = ''.obs;
+  final userDivisi = ''.obs;
 
   // Text controllers
   final emailController = TextEditingController();
@@ -56,6 +57,7 @@ class AuthController extends GetxController {
         userName.value = '';
         userEmail.value = '';
         userRole.value = '';
+        userDivisi.value = '';
         Get.find<AbsenceController>().resetState();
         Get.offAllNamed(AppRoutes.login);
       }
@@ -75,15 +77,18 @@ class AuthController extends GetxController {
         userName.value = data['name'] ?? '';
         userEmail.value = data['email'] ?? '';
         userRole.value = (data['role'] ?? 'user').toString();
+        userDivisi.value = (data['divisi'] ?? '').toString();
       } else {
         userName.value = _auth.currentUser?.displayName ?? '';
         userEmail.value = _auth.currentUser?.email ?? '';
         userRole.value = 'user';
+        userDivisi.value = '';
       }
     } catch (_) {
       userName.value = _auth.currentUser?.displayName ?? '';
       userEmail.value = _auth.currentUser?.email ?? '';
       userRole.value = 'user';
+      userDivisi.value = '';
     }
 
     // Navigate based on role
