@@ -635,6 +635,35 @@ class AdminController extends GetxController {
   final isUserDetailLoading = false.obs;
 
   final selectedMonthAdmin = DateTime.now().obs;
+  final selectedUserLogbooks = <Map<String, dynamic>>[].obs;
+
+  int get totalPointsAbsen {
+    int total = 0;
+    for (var item in filteredUserHistory) {
+      if (item['recordType'] == 'attendance') {
+        total += item['points'] as int? ?? 0;
+      }
+    }
+    return total;
+  }
+
+  int get totalPointsLogbook {
+    int total = 0;
+    final month = selectedMonthAdmin.value.month;
+    final year = selectedMonthAdmin.value.year;
+    for (var item in selectedUserLogbooks) {
+      final createdAt = item['createdAt'] as int? ?? 0;
+      if (createdAt > 0) {
+        final date = DateTime.fromMillisecondsSinceEpoch(createdAt);
+        if (date.month == month && date.year == year) {
+          total += item['points'] as int? ?? 0;
+        }
+      }
+    }
+    return total;
+  }
+
+  int get totalPointsBoth => totalPointsAbsen + totalPointsLogbook;
 
   List<Map<String, dynamic>> get filteredUserHistory {
     final month = selectedMonthAdmin.value.month;
@@ -709,6 +738,7 @@ class AdminController extends GetxController {
       if (userSnap.exists) {
         final data = userSnap.value as Map<dynamic, dynamic>;
         selectedUserInfo.value = {
+          'uid': uid,
           'name': data['name']?.toString() ?? '',
           'email': data['email']?.toString() ?? '',
           'divisi': data['divisi']?.toString() ?? '-',
@@ -804,6 +834,27 @@ class AdminController extends GetxController {
         });
       }
 
+      // Load user logbooks
+      final logbookSnap = await _db.child('users').child(uid).child('logbook').get();
+      final logList = <Map<String, dynamic>>[];
+      if (logbookSnap.exists) {
+        final logData = logbookSnap.value as Map<dynamic, dynamic>;
+        logData.forEach((key, value) {
+          if (value is Map) {
+            logList.add({
+              'id': key.toString(),
+              'content': value['content']?.toString() ?? '',
+              'divisi': value['divisi']?.toString() ?? '-',
+              'points': value['points'] as int? ?? 0,
+              'createdAt': value['createdAt'] as int? ?? 0,
+              'updatedAt': value['updatedAt'] as int? ?? 0,
+            });
+          }
+        });
+        logList.sort((a, b) => (b['createdAt'] as int).compareTo(a['createdAt'] as int));
+      }
+      selectedUserLogbooks.assignAll(logList);
+
       // Sort chronological descending
       list.sort((a, b) =>
           (b['dateKey'] as String).compareTo(a['dateKey'] as String));
@@ -813,6 +864,155 @@ class AdminController extends GetxController {
       debugPrint('Error loading user detail: $e');
     } finally {
       isUserDetailLoading.value = false;
+    }
+  }
+
+  Future<void> updateUserInfo(String uid, {
+    required String name,
+    required String divisi,
+    required String asal,
+  }) async {
+    try {
+      isLoading.value = true;
+      await _db.child('users').child(uid).update({
+        'name': name.trim(),
+        'divisi': divisi.trim(),
+        'asal': asal.trim(),
+      });
+      await loadUserDetail(uid);
+      await loadAllUsers();
+      Get.snackbar(
+        'Berhasil',
+        'Profil karyawan berhasil diperbarui!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal memperbarui profil: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> sendPasswordReset(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email.trim());
+      Get.snackbar(
+        'Berhasil',
+        'Email reset password telah dikirim ke $email!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal mengirim email reset password: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
+  }
+
+  Future<void> deleteUser(String uid) async {
+    try {
+      isLoading.value = true;
+      await _db.child('users').child(uid).remove();
+      await loadAllUsers();
+      Get.snackbar(
+        'Berhasil',
+        'Karyawan berhasil dihapus!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal menghapus karyawan: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateLogbookForUser(String uid, String logbookId, {
+    required String content,
+    required String divisi,
+    required int points,
+  }) async {
+    try {
+      isLoading.value = true;
+      await _db.child('users').child(uid).child('logbook').child(logbookId).update({
+        'content': content.trim(),
+        'divisi': divisi.trim(),
+        'points': points,
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+      await loadUserDetail(uid);
+      Get.snackbar(
+        'Berhasil',
+        'Logbook berhasil diperbarui!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal memperbarui logbook: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteLogbookForUser(String uid, String logbookId) async {
+    try {
+      isLoading.value = true;
+      await _db.child('users').child(uid).child('logbook').child(logbookId).remove();
+      await loadUserDetail(uid);
+      Get.snackbar(
+        'Berhasil',
+        'Logbook berhasil dihapus!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal menghapus logbook: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 

@@ -1275,7 +1275,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   final user = users[index];
                   return Container(
                     margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -1287,82 +1286,158 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         ),
                       ],
                     ),
-                    child: InkWell(
-                      onTap: () => Get.toNamed(
-                        AppRoutes.adminUserDetail,
-                        arguments: user['uid'],
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: const Color(0xFFE8EAF6),
-                            child: Text(
-                              (user['name'] as String).isNotEmpty
-                                  ? user['name'][0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF4A6CF7),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => Get.toNamed(
+                              AppRoutes.adminUserDetail,
+                              arguments: user['uid'],
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: const Color(0xFFE8EAF6),
+                                    child: Text(
+                                      (user['name'] as String).isNotEmpty
+                                          ? user['name'][0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF4A6CF7),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          user['name'],
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${user['email']}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE8EAF6),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          user['divisi'] ?? '-',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFF4A6CF7),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        user['asal'] ?? '-',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user['name'],
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${user['email']}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'detail') {
+                              Get.toNamed(
+                                AppRoutes.adminUserDetail,
+                                arguments: user['uid'],
+                              );
+                            } else if (value == 'edit') {
+                              _showEditProfileDialog(context, adminC, user);
+                            } else if (value == 'reset') {
+                              _showResetPasswordDialog(context, adminC, user['email']);
+                            } else if (value == 'delete') {
+                              _showDeleteUserDialog(context, adminC, user);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'detail',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, size: 18, color: Colors.blue),
+                                  SizedBox(width: 8),
+                                  Text('Detail'),
+                                ],
+                              ),
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE8EAF6),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  user['divisi'] ?? '-',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF4A6CF7),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined, size: 18, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Text('Edit Profil'),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                user['asal'] ?? '-',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade500,
-                                ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'reset',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.lock_reset, size: 18, color: Colors.amber),
+                                  SizedBox(width: 8),
+                                  Text('Reset PW'),
+                                ],
                               ),
-                            ],
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Hapus'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          icon: Icon(
+                            Icons.more_vert_rounded,
+                            color: Colors.grey.shade400,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -1565,6 +1640,108 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       onConfirm: () {
         Get.back();
         authC.logout();
+      },
+    );
+  }
+
+  void _showEditProfileDialog(BuildContext context, AdminController adminC, Map<String, dynamic> user) {
+    final nameCtrl = TextEditingController(text: user['name']);
+    final asalCtrl = TextEditingController(text: user['asal']);
+    final selectedDivisi = (user['divisi'] ?? '').toString().obs;
+
+    Get.defaultDialog(
+      title: 'Edit Profil Karyawan',
+      content: SingleChildScrollView(
+        child: Column(
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Nama Lengkap',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: asalCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Asal Sekolah/Instansi',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Obx(() {
+              final divisions = adminC.divisionsList;
+              return DropdownButtonFormField<String>(
+                initialValue: selectedDivisi.value.isEmpty ||
+                        !divisions.any((div) => div['name'] == selectedDivisi.value)
+                    ? null
+                    : selectedDivisi.value,
+                decoration: const InputDecoration(
+                  labelText: 'Divisi',
+                  border: OutlineInputBorder(),
+                ),
+                items: divisions.map((div) {
+                  return DropdownMenuItem(
+                    value: div['name'],
+                    child: Text(div['name'] ?? ''),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  selectedDivisi.value = val ?? '';
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+      textConfirm: 'Simpan',
+      textCancel: 'Batal',
+      confirmTextColor: Colors.white,
+      buttonColor: const Color(0xFF4A6CF7),
+      onConfirm: () {
+        if (nameCtrl.text.trim().isEmpty) {
+          Get.snackbar('Error', 'Nama tidak boleh kosong');
+          return;
+        }
+        Get.back();
+        adminC.updateUserInfo(
+          user['uid'],
+          name: nameCtrl.text.trim(),
+          divisi: selectedDivisi.value,
+          asal: asalCtrl.text.trim(),
+        );
+      },
+    );
+  }
+
+  void _showResetPasswordDialog(BuildContext context, AdminController adminC, String email) {
+    Get.defaultDialog(
+      title: 'Reset Password',
+      middleText: 'Kirim email instruksi reset password ke $email?',
+      textConfirm: 'Kirim',
+      textCancel: 'Batal',
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.orange.shade800,
+      onConfirm: () {
+        Get.back();
+        adminC.sendPasswordReset(email);
+      },
+    );
+  }
+
+  void _showDeleteUserDialog(BuildContext context, AdminController adminC, Map<String, dynamic> user) {
+    Get.defaultDialog(
+      title: 'Hapus Karyawan',
+      middleText:
+          'Apakah Anda yakin ingin menghapus akun "${user['name']}"? Semua data di database akan hilang dan aksi ini tidak bisa dibatalkan.',
+      textConfirm: 'Hapus',
+      textCancel: 'Batal',
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.red.shade600,
+      onConfirm: () {
+        Get.back();
+        adminC.deleteUser(user['uid']);
       },
     );
   }
