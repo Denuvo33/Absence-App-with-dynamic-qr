@@ -1317,6 +1317,26 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     final lateMins = stats['totalLateMinutes'] ?? 0;
     final totalLeaves = stats['totalLeaves'] ?? 0;
 
+    // Build lookup maps for the month
+    final history = adminC.filteredUserHistory;
+    final attendanceMap = <String, Map<String, dynamic>>{};
+    final leaveMap = <String, Map<String, dynamic>>{};
+
+    for (var item in history) {
+      final dateKey = item['dateKey']?.toString() ?? '';
+      if (item['recordType'] == 'attendance') {
+        attendanceMap[dateKey] = item;
+      } else if (item['recordType'] == 'leave') {
+        leaveMap[dateKey] = item;
+      }
+    }
+
+    // Get month range
+    final selectedMonth = adminC.selectedMonthAdmin.value;
+    final year = selectedMonth.year;
+    final month = selectedMonth.month;
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+
     List<List<dynamic>> rows = [];
 
     // Header Laporan
@@ -1341,9 +1361,10 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     rows.add([]);
 
     // Header Riwayat
-    rows.add(['DETAIL RIWAYAT ABSENSI & IZIN']);
+    rows.add(['DETAIL RIWAYAT ABSENSI (Tgl 1 - $daysInMonth)']);
     rows.add([
       'Tanggal',
+      'Hari',
       'Tipe',
       'Status',
       'Jam Masuk',
@@ -1352,23 +1373,97 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
       'Lokasi Keluar',
       'Durasi',
       'Menit Telat',
-      'Keterangan/Alasan',
+      'Poin',
+      'Keterangan',
     ]);
 
-    // Data Riwayat
-    final history = adminC.filteredUserHistory;
-    for (var item in history) {
-      final isLeave = item['recordType'] == 'leave';
-      final date = item['date'] as DateTime?;
-      final dateStr = date != null ? DateFormat('yyyy-MM-dd').format(date) : (item['dateKey'] ?? '-');
+    // Iterate all days in month
+    for (int day = 1; day <= daysInMonth; day++) {
+      final date = DateTime(year, month, day);
+      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+      final dayName = DateFormat('EEEE', 'id_ID').format(date);
 
-      if (isLeave) {
+      // Check public holiday first (overrides day settings)
+      final holidayName = adminC.getPublicHolidayName(dateKey);
+      final isHoliday = holidayName != null;
+
+      // Check day-of-week setting
+      final dayStatus = adminC.getDayStatus(date);
+
+      if (isHoliday) {
+        rows.add([
+          dateKey,
+          dayName,
+          'LIBUR',
+          'Tgl Merah',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          holidayName,
+        ]);
+        continue;
+      }
+
+      if (dayStatus == 'holiday') {
+        rows.add([
+          dateKey,
+          dayName,
+          'LIBUR',
+          'Hari Libur',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          'Libur mingguan ($dayName)',
+        ]);
+        continue;
+      }
+
+      // Check attendance
+      if (attendanceMap.containsKey(dateKey)) {
+        final item = attendanceMap[dateKey]!;
+        final clockInStr = item['clockIn'] != null ? DateFormat('HH:mm').format(item['clockIn']) : '-';
+        final clockInLoc = item['clockInLocation']?.toString() ?? '-';
+        final clockOutStr = item['clockOut'] != null ? DateFormat('HH:mm').format(item['clockOut']) : '-';
+        final clockOutLoc = item['clockOutLocation']?.toString() ?? '-';
+        final isLate = item['status'] == 'late';
+        final statusStr = isLate ? 'Terlambat' : 'Tepat Waktu';
+        final duration = item['duration'] ?? '-';
+        final lateMinutesStr = item['lateMinutes']?.toString() ?? '0';
+        final points = item['points']?.toString() ?? '0';
+        final tipeLabel = dayStatus == 'wfh' ? 'WFH' : 'Absensi';
+
+        rows.add([
+          dateKey,
+          dayName,
+          tipeLabel,
+          statusStr,
+          clockInStr,
+          clockInLoc,
+          clockOutStr,
+          clockOutLoc,
+          duration,
+          lateMinutesStr,
+          points,
+          dayStatus == 'wfh' ? 'Work From Home' : '-',
+        ]);
+      } else if (leaveMap.containsKey(dateKey)) {
+        final item = leaveMap[dateKey]!;
         final type = item['leaveType']?.toString().toUpperCase() ?? 'IZIN';
         final reason = item['reason'] ?? '-';
         rows.add([
-          dateStr,
+          dateKey,
+          dayName,
           'Izin/Cuti',
           type,
+          '-',
           '-',
           '-',
           '-',
@@ -1378,29 +1473,41 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
           reason,
         ]);
       } else {
-        final clockInStr = item['clockIn'] != null ? DateFormat('HH:mm').format(item['clockIn']) : '-';
-        final clockInLoc = item['clockInLocation']?.toString() ?? '-';
-        final clockOutStr = item['clockOut'] != null ? DateFormat('HH:mm').format(item['clockOut']) : '-';
-        final clockOutLoc = item['clockOutLocation']?.toString() ?? '-';
+        // No record for this day
+        final now = DateTime.now();
+        final isInFuture = date.isAfter(DateTime(now.year, now.month, now.day));
 
-        final isLate = item['status'] == 'late';
-        final statusStr = isLate ? 'Terlambat' : 'Tepat Waktu';
-
-        final duration = item['duration'] ?? '-';
-        final lateMinutesStr = item['lateMinutes']?.toString() ?? '0';
-
-        rows.add([
-          dateStr,
-          'Absensi',
-          statusStr,
-          clockInStr,
-          clockInLoc,
-          clockOutStr,
-          clockOutLoc,
-          duration,
-          lateMinutesStr,
-          '-',
-        ]);
+        if (dayStatus == 'wfh') {
+          rows.add([
+            dateKey,
+            dayName,
+            isInFuture ? '-' : 'WFH',
+            isInFuture ? '-' : 'Tidak Absen',
+            '-',
+            '-',
+            '-',
+            '-',
+            '-',
+            '-',
+            '-',
+            isInFuture ? 'Belum tiba' : 'WFH - tidak melakukan absensi',
+          ]);
+        } else {
+          rows.add([
+            dateKey,
+            dayName,
+            isInFuture ? '-' : 'Tidak Hadir',
+            isInFuture ? '-' : 'Alfa',
+            '-',
+            '-',
+            '-',
+            '-',
+            '-',
+            '-',
+            '-',
+            isInFuture ? 'Belum tiba' : 'Tidak hadir tanpa keterangan',
+          ]);
+        }
       }
     }
 

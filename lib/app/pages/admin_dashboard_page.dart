@@ -1747,6 +1747,272 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ],
               ),
             ),
+
+            const SizedBox(height: 24),
+
+            // ─── Pengaturan Hari (Per Hari) ─────────────────
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_view_week_rounded, color: const Color(0xFF4A6CF7), size: 22),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Pengaturan Hari',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Atur status tiap hari dalam seminggu (berlaku setiap bulan)',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 16),
+                  Obx(() {
+                    const dayEntries = [
+                      {'key': 'monday', 'label': 'Senin'},
+                      {'key': 'tuesday', 'label': 'Selasa'},
+                      {'key': 'wednesday', 'label': 'Rabu'},
+                      {'key': 'thursday', 'label': 'Kamis'},
+                      {'key': 'friday', 'label': 'Jumat'},
+                      {'key': 'saturday', 'label': 'Sabtu'},
+                      {'key': 'sunday', 'label': 'Minggu'},
+                    ];
+
+                    return Column(
+                      children: dayEntries.map((entry) {
+                        final dayKey = entry['key']!;
+                        final dayLabel = entry['label']!;
+                        final currentStatus = adminC.daySettings[dayKey] ?? 'masuk';
+
+                        IconData icon;
+                        Color iconColor;
+                        switch (currentStatus) {
+                          case 'holiday':
+                            icon = Icons.beach_access_rounded;
+                            iconColor = Colors.red.shade500;
+                            break;
+                          case 'wfh':
+                            icon = Icons.home_work_rounded;
+                            iconColor = Colors.blue.shade500;
+                            break;
+                          default:
+                            icon = Icons.business_rounded;
+                            iconColor = Colors.green.shade500;
+                        }
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: currentStatus == 'holiday'
+                                ? Colors.red.shade50
+                                : currentStatus == 'wfh'
+                                    ? Colors.blue.shade50
+                                    : Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: currentStatus == 'holiday'
+                                  ? Colors.red.shade200
+                                  : currentStatus == 'wfh'
+                                      ? Colors.blue.shade200
+                                      : Colors.green.shade200,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(icon, size: 20, color: iconColor),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  dayLabel,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              DropdownButton<String>(
+                                value: currentStatus,
+                                underline: const SizedBox(),
+                                isDense: true,
+                                borderRadius: BorderRadius.circular(12),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'masuk',
+                                    child: Text('Masuk', style: TextStyle(fontSize: 13)),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'holiday',
+                                    child: Text('Libur', style: TextStyle(fontSize: 13)),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'wfh',
+                                    child: Text('WFH', style: TextStyle(fontSize: 13)),
+                                  ),
+                                ],
+                                onChanged: (value) {
+                                  if (value != null && value != currentStatus) {
+                                    adminC.updateDaySettings(dayKey, value);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  }),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ─── Kelola Hari Libur (Tgl Merah) ─────────────
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.event_busy_rounded, color: Colors.red.shade600, size: 22),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Kelola Hari Libur (Tgl Merah)',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Tanggal libur yang ditambahkan akan ditandai di rekap absensi',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 16),
+                  _HolidayAddWidget(adminC: adminC),
+                  const SizedBox(height: 16),
+                  Obx(() {
+                    if (adminC.publicHolidays.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'Belum ada hari libur. Tambahkan di atas.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      );
+                    }
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: adminC.publicHolidays.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final holiday = adminC.publicHolidays[index];
+                        final dateStr = holiday['date'] ?? '';
+                        final name = holiday['name'] ?? '';
+                        // Format display date
+                        String displayDate = dateStr;
+                        try {
+                          final d = DateTime.parse(dateStr);
+                          displayDate = DateFormat('dd MMM yyyy', 'id_ID').format(d);
+                        } catch (_) {}
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.celebration, size: 18, color: Colors.red.shade400),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                        color: Colors.red.shade800,
+                                      ),
+                                    ),
+                                    Text(
+                                      displayDate,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.red.shade400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete_outline, size: 20, color: Colors.red.shade400),
+                                onPressed: () {
+                                  Get.defaultDialog(
+                                    title: 'Hapus Hari Libur',
+                                    middleText: 'Hapus "$name" ($displayDate)?',
+                                    textConfirm: 'Hapus',
+                                    textCancel: 'Batal',
+                                    confirmTextColor: Colors.white,
+                                    buttonColor: Colors.red.shade600,
+                                    onConfirm: () {
+                                      Get.back();
+                                      adminC.deletePublicHoliday(dateStr);
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -1932,6 +2198,130 @@ class _StatCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _HolidayAddWidget extends StatefulWidget {
+  final AdminController adminC;
+  const _HolidayAddWidget({required this.adminC});
+
+  @override
+  State<_HolidayAddWidget> createState() => _HolidayAddWidgetState();
+}
+
+class _HolidayAddWidgetState extends State<_HolidayAddWidget> {
+  final _nameCtrl = TextEditingController();
+  DateTime? _selectedDate;
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateLabel = _selectedDate != null
+        ? DateFormat('dd MMM yyyy', 'id_ID').format(_selectedDate!)
+        : 'Pilih Tanggal';
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: _pickDate,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 18, color: Colors.grey.shade600),
+                      const SizedBox(width: 8),
+                      Text(
+                        dateLabel,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _selectedDate != null ? Colors.black87 : Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _nameCtrl,
+                decoration: InputDecoration(
+                  hintText: 'Nama hari libur',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: () {
+                if (_selectedDate == null || _nameCtrl.text.trim().isEmpty) {
+                  Get.snackbar(
+                    'Peringatan',
+                    'Pilih tanggal dan isi nama hari libur.',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.orange.shade600,
+                    colorText: Colors.white,
+                    margin: const EdgeInsets.all(16),
+                  );
+                  return;
+                }
+                final dateKey = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+                widget.adminC.addPublicHoliday(dateKey, _nameCtrl.text.trim());
+                _nameCtrl.clear();
+                setState(() => _selectedDate = null);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+              child: const Icon(Icons.add),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

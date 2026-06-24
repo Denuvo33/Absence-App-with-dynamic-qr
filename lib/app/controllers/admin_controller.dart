@@ -16,6 +16,17 @@ class AdminController extends GetxController {
   final defaultPoints = 60.obs;
   final defaultLogbookPoints = 60.obs;
 
+  // Day settings (per day of week: masuk / holiday / wfh)
+  final daySettings = <String, String>{
+    'monday': 'masuk',
+    'tuesday': 'masuk',
+    'wednesday': 'masuk',
+    'thursday': 'masuk',
+    'friday': 'masuk',
+    'saturday': 'holiday',
+    'sunday': 'holiday',
+  }.obs;
+
   // Data lists
   final allUsers = <Map<String, dynamic>>[].obs;
   final todayAttendance = <Map<String, dynamic>>[].obs;
@@ -28,6 +39,9 @@ class AdminController extends GetxController {
 
   // Asal suggestions
   final asalSuggestions = <String>[].obs;
+
+  // Public Holidays
+  final publicHolidays = <Map<String, String>>[].obs;
 
   // QR Session
   final qrCode = ''.obs;
@@ -62,6 +76,7 @@ class AdminController extends GetxController {
       loadAllLeaveRequests(),
       loadDivisions(),
       loadAsalSuggestions(),
+      loadPublicHolidays(),
     ]);
     // Check if QR session is active
     _listenQrSession();
@@ -82,6 +97,20 @@ class AdminController extends GetxController {
             int.tryParse(data['defaultPoints'].toString()) ?? 60;
         defaultLogbookPoints.value =
             int.tryParse(data['defaultLogbookPoints'].toString()) ?? 60;
+
+        // Load day settings
+        if (data['daySettings'] is Map) {
+          final ds = data['daySettings'] as Map<dynamic, dynamic>;
+          final defaults = <String, String>{
+            'monday': 'masuk', 'tuesday': 'masuk', 'wednesday': 'masuk',
+            'thursday': 'masuk', 'friday': 'masuk',
+            'saturday': 'holiday', 'sunday': 'holiday',
+          };
+          for (final key in defaults.keys) {
+            defaults[key] = ds[key]?.toString() ?? defaults[key]!;
+          }
+          daySettings.assignAll(defaults);
+        }
       }
     } catch (e) {
       debugPrint('Error loading schedule: $e');
@@ -97,6 +126,7 @@ class AdminController extends GetxController {
         'tolerance': tol,
         'defaultPoints': points,
         'defaultLogbookPoints': logbookPoints,
+        'daySettings': Map<String, String>.from(daySettings),
       });
       scheduleClockIn.value = clockIn;
       scheduleClockOut.value = clockOut;
@@ -122,6 +152,42 @@ class AdminController extends GetxController {
         margin: const EdgeInsets.all(16),
       );
     }
+  }
+
+  Future<void> updateDaySettings(String dayKey, String status) async {
+    try {
+      daySettings[dayKey] = status;
+      await _db.child('absence').child('daySettings').child(dayKey).set(status);
+      Get.snackbar(
+        'Berhasil',
+        'Pengaturan hari diperbarui.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal memperbarui pengaturan hari.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
+  }
+
+  /// Get the day status for a given DateTime's weekday.
+  /// Returns 'masuk', 'holiday', or 'wfh'.
+  String getDayStatus(DateTime date) {
+    const dayKeys = [
+      '', // 0 unused
+      'monday', 'tuesday', 'wednesday', 'thursday',
+      'friday', 'saturday', 'sunday',
+    ];
+    final key = dayKeys[date.weekday];
+    return daySettings[key] ?? 'masuk';
   }
 
   // ─── QR Session ────────────────────────────────────────────
@@ -269,6 +335,88 @@ class AdminController extends GetxController {
     } catch (e) {
       debugPrint('Error loading asal suggestions: $e');
     }
+  }
+
+  // ─── Public Holidays ──────────────────────────────────────
+
+  Future<void> loadPublicHolidays() async {
+    try {
+      final snapshot = await _db.child('public_holidays').get();
+      if (!snapshot.exists) {
+        publicHolidays.clear();
+        return;
+      }
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      final list = <Map<String, String>>[];
+      data.forEach((key, value) {
+        list.add({
+          'date': key.toString(),
+          'name': value.toString(),
+        });
+      });
+      list.sort((a, b) => (a['date'] ?? '').compareTo(b['date'] ?? ''));
+      publicHolidays.assignAll(list);
+    } catch (e) {
+      debugPrint('Error loading public holidays: $e');
+    }
+  }
+
+  Future<void> addPublicHoliday(String dateKey, String name) async {
+    if (dateKey.trim().isEmpty || name.trim().isEmpty) return;
+    try {
+      await _db.child('public_holidays').child(dateKey.trim()).set(name.trim());
+      await loadPublicHolidays();
+      Get.snackbar(
+        'Berhasil',
+        'Hari libur "$name" ($dateKey) berhasil ditambahkan.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal menambahkan hari libur.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
+  }
+
+  Future<void> deletePublicHoliday(String dateKey) async {
+    try {
+      await _db.child('public_holidays').child(dateKey).remove();
+      await loadPublicHolidays();
+      Get.snackbar(
+        'Berhasil',
+        'Hari libur berhasil dihapus.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal menghapus hari libur.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
+  }
+
+  bool isPublicHoliday(String dateKey) {
+    return publicHolidays.any((h) => h['date'] == dateKey);
+  }
+
+  String? getPublicHolidayName(String dateKey) {
+    final match = publicHolidays.firstWhereOrNull((h) => h['date'] == dateKey);
+    return match?['name'];
   }
 
   // ─── Create User ──────────────────────────────────────────
