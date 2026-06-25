@@ -462,9 +462,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 if (adminC.todayLogbooks.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: Center(
-                      child: Text('Belum ada logbook hari ini.'),
-                    ),
+                    child: Center(child: Text('Belum ada logbook hari ini.')),
                   );
                 }
                 return ListView.builder(
@@ -475,7 +473,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   itemBuilder: (context, index) {
                     final item = adminC.todayLogbooks[index];
                     final time = DateFormat('HH:mm').format(
-                      DateTime.fromMillisecondsSinceEpoch(item['createdAt'] as int),
+                      DateTime.fromMillisecondsSinceEpoch(
+                        item['createdAt'] as int,
+                      ),
                     );
 
                     return Container(
@@ -526,7 +526,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE8EAF6),
                                   borderRadius: BorderRadius.circular(6),
@@ -542,7 +545,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFFF3E0),
                                   borderRadius: BorderRadius.circular(6),
@@ -594,10 +600,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             const SizedBox(height: 8),
             Text(
               'Generate QR untuk absensi anak magang',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 32),
 
@@ -998,8 +1001,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                     ),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.red,
-                                      side:
-                                          const BorderSide(color: Colors.red),
+                                      side: const BorderSide(color: Colors.red),
                                     ),
                                     child: const Text('Tolak'),
                                   ),
@@ -1084,10 +1086,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 children: [
                   const Text(
                     'Manage Divisi',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -1183,10 +1182,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 children: [
                   const Text(
                     'Buat Akun User Baru',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -1245,28 +1241,31 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         ),
                       );
                     }
-                    return Obx(() => DropdownButtonFormField<String>(
-                          initialValue: selectedDivisi.value.isEmpty
-                              ? null
-                              : selectedDivisi.value,
-                          decoration: InputDecoration(
-                            labelText: 'Divisi',
-                            prefixIcon:
-                                const Icon(Icons.business_center_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                    return Obx(
+                      () => DropdownButtonFormField<String>(
+                        initialValue: selectedDivisi.value.isEmpty
+                            ? null
+                            : selectedDivisi.value,
+                        decoration: InputDecoration(
+                          labelText: 'Divisi',
+                          prefixIcon: const Icon(
+                            Icons.business_center_outlined,
                           ),
-                          items: divisions.map((div) {
-                            return DropdownMenuItem(
-                              value: div['name'],
-                              child: Text(div['name'] ?? ''),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            selectedDivisi.value = val ?? '';
-                          },
-                        ));
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        items: divisions.map((div) {
+                          return DropdownMenuItem(
+                            value: div['name'],
+                            child: Text(div['name'] ?? ''),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          selectedDivisi.value = val ?? '';
+                        },
+                      ),
+                    );
                   }),
                   const SizedBox(height: 12),
 
@@ -1278,91 +1277,97 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         if (textEditingValue.text.isEmpty) {
                           return suggestions;
                         }
-                        return suggestions.where((s) => s
-                            .toLowerCase()
-                            .contains(
-                                textEditingValue.text.toLowerCase()));
+                        return suggestions.where(
+                          (s) => s.toLowerCase().contains(
+                            textEditingValue.text.toLowerCase(),
+                          ),
+                        );
                       },
                       onSelected: (val) {
                         asalCtrl.text = val;
                       },
-                      fieldViewBuilder: (context, controller, focusNode,
-                          onEditingComplete) {
-                        // Sync the autocomplete controller with asalCtrl
-                        asalCtrl.addListener(() {
-                          if (controller.text != asalCtrl.text) {
-                            controller.text = asalCtrl.text;
-                          }
-                        });
-                        return TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          onEditingComplete: onEditingComplete,
-                          onChanged: (val) => asalCtrl.text = val,
-                          decoration: InputDecoration(
-                            labelText: 'Asal (Instansi/Sekolah)',
-                            prefixIcon:
-                                const Icon(Icons.location_city_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        );
-                      },
+                      fieldViewBuilder:
+                          (context, controller, focusNode, onEditingComplete) {
+                            // Sync the autocomplete controller with asalCtrl
+                            asalCtrl.addListener(() {
+                              if (controller.text != asalCtrl.text) {
+                                controller.text = asalCtrl.text;
+                              }
+                            });
+                            return TextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              onEditingComplete: onEditingComplete,
+                              onChanged: (val) => asalCtrl.text = val,
+                              decoration: InputDecoration(
+                                labelText: 'Asal (Instansi/Sekolah)',
+                                prefixIcon: const Icon(
+                                  Icons.location_city_outlined,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                          },
                     );
                   }),
 
                   const SizedBox(height: 20),
 
-                  Obx(() => SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton.icon(
-                          onPressed: adminC.isCreatingUser.value
-                              ? null
-                              : () {
-                                  adminC.createUser(
-                                    name: nameCtrl.text,
-                                    email: emailCtrl.text,
-                                    password: pwCtrl.text,
-                                    divisi: selectedDivisi.value,
-                                    asal: asalCtrl.text,
-                                  );
+                  Obx(
+                    () => SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: adminC.isCreatingUser.value
+                            ? null
+                            : () async {
+                                final success = await adminC.createUser(
+                                  name: nameCtrl.text,
+                                  email: emailCtrl.text,
+                                  password: pwCtrl.text,
+                                  divisi: selectedDivisi.value,
+                                  asal: asalCtrl.text,
+                                );
+                                if (success) {
                                   // Clear form on success
                                   nameCtrl.clear();
                                   emailCtrl.clear();
                                   pwCtrl.clear();
                                   asalCtrl.clear();
                                   selectedDivisi.value = '';
-                                },
-                          icon: adminC.isCreatingUser.value
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.person_add),
-                          label: Text(
-                            adminC.isCreatingUser.value
-                                ? 'Membuat...'
-                                : 'Buat Akun',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4A6CF7),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                                }
+                              },
+                        icon: adminC.isCreatingUser.value
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.person_add),
+                        label: Text(
+                          adminC.isCreatingUser.value
+                              ? 'Membuat...'
+                              : 'Buat Akun',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      )),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4A6CF7),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1372,10 +1377,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             // ─── User List ───────────────────────────────────
             const Text(
               'Daftar User',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Obx(() {
@@ -1390,9 +1392,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Center(
-                    child: Text('Belum ada user terdaftar.'),
-                  ),
+                  child: const Center(child: Text('Belum ada user terdaftar.')),
                 );
               }
               return ListView.builder(
@@ -1446,7 +1446,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           user['name'],
@@ -1477,7 +1478,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFE8EAF6),
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                         ),
                                         child: Text(
                                           user['divisi'] ?? '-',
@@ -1513,7 +1516,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             } else if (value == 'edit') {
                               _showEditProfileDialog(context, adminC, user);
                             } else if (value == 'reset') {
-                              _showResetPasswordDialog(context, adminC, user['email']);
+                              _showResetPasswordDialog(
+                                context,
+                                adminC,
+                                user['email'],
+                              );
                             } else if (value == 'delete') {
                               _showDeleteUserDialog(context, adminC, user);
                             }
@@ -1523,7 +1530,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               value: 'detail',
                               child: Row(
                                 children: [
-                                  Icon(Icons.info_outline, size: 18, color: Colors.blue),
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 18,
+                                    color: Colors.blue,
+                                  ),
                                   SizedBox(width: 8),
                                   Text('Detail'),
                                 ],
@@ -1533,7 +1544,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               value: 'edit',
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit_outlined, size: 18, color: Colors.orange),
+                                  Icon(
+                                    Icons.edit_outlined,
+                                    size: 18,
+                                    color: Colors.orange,
+                                  ),
                                   SizedBox(width: 8),
                                   Text('Edit Profil'),
                                 ],
@@ -1543,7 +1558,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               value: 'reset',
                               child: Row(
                                 children: [
-                                  Icon(Icons.lock_reset, size: 18, color: Colors.amber),
+                                  Icon(
+                                    Icons.lock_reset,
+                                    size: 18,
+                                    color: Colors.amber,
+                                  ),
                                   SizedBox(width: 8),
                                   Text('Reset PW'),
                                 ],
@@ -1553,7 +1572,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               value: 'delete',
                               child: Row(
                                 children: [
-                                  Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                  Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                    color: Colors.red,
+                                  ),
                                   SizedBox(width: 8),
                                   Text('Hapus'),
                                 ],
@@ -1658,10 +1681,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 children: [
                   const Text(
                     'Jadwal & Absensi',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -1769,7 +1789,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.calendar_view_week_rounded, color: const Color(0xFF4A6CF7), size: 22),
+                      Icon(
+                        Icons.calendar_view_week_rounded,
+                        color: const Color(0xFF4A6CF7),
+                        size: 22,
+                      ),
                       const SizedBox(width: 8),
                       const Text(
                         'Pengaturan Hari',
@@ -1801,7 +1825,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       children: dayEntries.map((entry) {
                         final dayKey = entry['key']!;
                         final dayLabel = entry['label']!;
-                        final currentStatus = adminC.daySettings[dayKey] ?? 'masuk';
+                        final currentStatus =
+                            adminC.daySettings[dayKey] ?? 'masuk';
 
                         IconData icon;
                         Color iconColor;
@@ -1821,20 +1846,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: currentStatus == 'holiday'
                                 ? Colors.red.shade50
                                 : currentStatus == 'wfh'
-                                    ? Colors.blue.shade50
-                                    : Colors.green.shade50,
+                                ? Colors.blue.shade50
+                                : Colors.green.shade50,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: currentStatus == 'holiday'
                                   ? Colors.red.shade200
                                   : currentStatus == 'wfh'
-                                      ? Colors.blue.shade200
-                                      : Colors.green.shade200,
+                                  ? Colors.blue.shade200
+                                  : Colors.green.shade200,
                             ),
                           ),
                           child: Row(
@@ -1858,15 +1886,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 items: const [
                                   DropdownMenuItem(
                                     value: 'masuk',
-                                    child: Text('Masuk', style: TextStyle(fontSize: 13)),
+                                    child: Text(
+                                      'Masuk',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
                                   ),
                                   DropdownMenuItem(
                                     value: 'holiday',
-                                    child: Text('Libur', style: TextStyle(fontSize: 13)),
+                                    child: Text(
+                                      'Libur',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
                                   ),
                                   DropdownMenuItem(
                                     value: 'wfh',
-                                    child: Text('WFH', style: TextStyle(fontSize: 13)),
+                                    child: Text(
+                                      'WFH',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
                                   ),
                                 ],
                                 onChanged: (value) {
@@ -1906,7 +1943,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.event_busy_rounded, color: Colors.red.shade600, size: 22),
+                      Icon(
+                        Icons.event_busy_rounded,
+                        color: Colors.red.shade600,
+                        size: 22,
+                      ),
                       const SizedBox(width: 8),
                       const Text(
                         'Kelola Hari Libur (Tgl Merah)',
@@ -1951,11 +1992,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         String displayDate = dateStr;
                         try {
                           final d = DateTime.parse(dateStr);
-                          displayDate = DateFormat('dd MMM yyyy', 'id_ID').format(d);
+                          displayDate = DateFormat(
+                            'dd MMM yyyy',
+                            'id_ID',
+                          ).format(d);
                         } catch (_) {}
 
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.red.shade50,
                             borderRadius: BorderRadius.circular(10),
@@ -1963,7 +2010,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.celebration, size: 18, color: Colors.red.shade400),
+                              Icon(
+                                Icons.celebration,
+                                size: 18,
+                                color: Colors.red.shade400,
+                              ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
@@ -1988,7 +2039,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 ),
                               ),
                               IconButton(
-                                icon: Icon(Icons.delete_outline, size: 20, color: Colors.red.shade400),
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                  color: Colors.red.shade400,
+                                ),
                                 onPressed: () {
                                   Get.defaultDialog(
                                     title: 'Hapus Hari Libur',
@@ -2038,7 +2093,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, AdminController adminC, Map<String, dynamic> user) {
+  void _showEditProfileDialog(
+    BuildContext context,
+    AdminController adminC,
+    Map<String, dynamic> user,
+  ) {
     final nameCtrl = TextEditingController(text: user['name']);
     final asalCtrl = TextEditingController(text: user['asal']);
     final selectedDivisi = (user['divisi'] ?? '').toString().obs;
@@ -2067,8 +2126,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Obx(() {
               final divisions = adminC.divisionsList;
               return DropdownButtonFormField<String>(
-                initialValue: selectedDivisi.value.isEmpty ||
-                        !divisions.any((div) => div['name'] == selectedDivisi.value)
+                initialValue:
+                    selectedDivisi.value.isEmpty ||
+                        !divisions.any(
+                          (div) => div['name'] == selectedDivisi.value,
+                        )
                     ? null
                     : selectedDivisi.value,
                 decoration: const InputDecoration(
@@ -2109,7 +2171,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  void _showResetPasswordDialog(BuildContext context, AdminController adminC, String email) {
+  void _showResetPasswordDialog(
+    BuildContext context,
+    AdminController adminC,
+    String email,
+  ) {
     Get.defaultDialog(
       title: 'Reset Password',
       middleText: 'Kirim email instruksi reset password ke $email?',
@@ -2124,7 +2190,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  void _showDeleteUserDialog(BuildContext context, AdminController adminC, Map<String, dynamic> user) {
+  void _showDeleteUserDialog(
+    BuildContext context,
+    AdminController adminC,
+    Map<String, dynamic> user,
+  ) {
     Get.defaultDialog(
       title: 'Hapus Anak Magang',
       middleText:
@@ -2246,20 +2316,29 @@ class _HolidayAddWidgetState extends State<_HolidayAddWidget> {
               child: InkWell(
                 onTap: _pickDate,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade400),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 18, color: Colors.grey.shade600),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 18,
+                        color: Colors.grey.shade600,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         dateLabel,
                         style: TextStyle(
                           fontSize: 14,
-                          color: _selectedDate != null ? Colors.black87 : Colors.grey.shade500,
+                          color: _selectedDate != null
+                              ? Colors.black87
+                              : Colors.grey.shade500,
                         ),
                       ),
                     ],

@@ -42,8 +42,10 @@ class AbsenceController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    loadSchedule();
-    loadTodayAttendance();
+    if (_auth.currentUser != null) {
+      loadSchedule();
+      loadTodayAttendance();
+    }
   }
 
   // Reset state when switching accounts
@@ -65,46 +67,46 @@ class AbsenceController extends GetxController {
   // ─── Location Helpers ────────────────────────────────────────
 
   Future<String?> _getLocationAndAddress() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+    try {
+      bool serviceEnabled;
+      LocationPermission permission;
 
-    // Cek GPS aktif tidak
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      Get.snackbar(
-        'GPS Nonaktif',
-        'Layanan lokasi (GPS) tidak aktif. Mohon nyalakan GPS untuk absen.',
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-      );
-      return null;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+      // Cek GPS aktif tidak
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
         Get.snackbar(
-          'Izin Ditolak',
-          'Akses lokasi dibutuhkan untuk validasi absensi.',
+          'GPS Nonaktif',
+          'Layanan lokasi (GPS) tidak aktif. Mohon nyalakan GPS untuk absen.',
           backgroundColor: Colors.red.shade600,
           colorText: Colors.white,
         );
-        return null; // Ditolak
+        return null;
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      Get.snackbar(
-        'Izin Permanen Ditolak',
-        'Akses lokasi diblokir. Silakan izinkan dari pengaturan sistem.',
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-      );
-      return null;
-    }
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          Get.snackbar(
+            'Izin Ditolak',
+            'Akses lokasi dibutuhkan untuk validasi absensi.',
+            backgroundColor: Colors.red.shade600,
+            colorText: Colors.white,
+          );
+          return null; // Ditolak
+        }
+      }
 
-    try {
+      if (permission == LocationPermission.deniedForever) {
+        Get.snackbar(
+          'Izin Permanen Ditolak',
+          'Akses lokasi diblokir. Silakan izinkan dari pengaturan sistem.',
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+        );
+        return null;
+      }
+
       Position position = await Geolocator.getCurrentPosition(
         // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.high,

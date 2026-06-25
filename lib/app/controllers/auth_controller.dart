@@ -30,19 +30,25 @@ class AuthController extends GetxController {
 
   @override
   void onReady() async {
-    var locationPermission = await Geolocator.checkPermission();
-    if (locationPermission == LocationPermission.denied) {
-      locationPermission = await Geolocator.requestPermission();
-    }
-    if (locationPermission == LocationPermission.deniedForever) {
-      Get.snackbar(
-        'Error',
-        'Lokasi tidak di Izinkan',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+    if (GetPlatform.isAndroid || GetPlatform.isIOS) {
+      try {
+        var locationPermission = await Geolocator.checkPermission();
+        if (locationPermission == LocationPermission.denied) {
+          locationPermission = await Geolocator.requestPermission();
+        }
+        if (locationPermission == LocationPermission.deniedForever) {
+          Get.snackbar(
+            'Error',
+            'Lokasi tidak di Izinkan',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade600,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+          );
+        }
+      } catch (e) {
+        debugPrint('Error checking location permission: $e');
+      }
     }
     super.onReady();
     // Check initial auth state once

@@ -63,7 +63,9 @@ class AdminController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    loadAll();
+    if (FirebaseAuth.instance.currentUser != null) {
+      loadAll();
+    }
   }
 
   Future<void> loadAll() async {
@@ -421,7 +423,7 @@ class AdminController extends GetxController {
 
   // ─── Create User ──────────────────────────────────────────
 
-  Future<void> createUser({
+  Future<bool> createUser({
     required String name,
     required String email,
     required String password,
@@ -431,15 +433,28 @@ class AdminController extends GetxController {
     if (name.trim().isEmpty ||
         email.trim().isEmpty ||
         password.trim().isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Nama, email, dan password harus diisi.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
-      return;
+      if (GetPlatform.isWindows) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          Get.snackbar(
+            'Error',
+            'Nama, email, dan password harus diisi.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade600,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+          );
+        });
+      } else {
+        Get.snackbar(
+          'Error',
+          'Nama, email, dan password harus diisi.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      }
+      return false;
     }
 
     isCreatingUser.value = true;
@@ -485,15 +500,30 @@ class AdminController extends GetxController {
       await loadAllUsers();
       await loadAsalSuggestions();
 
-      Get.snackbar(
-        'Berhasil',
-        'Akun "${name.trim()}" berhasil dibuat!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade600,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      if (GetPlatform.isWindows) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          Get.snackbar(
+            'Berhasil',
+            'Akun "${name.trim()}" berhasil dibuat!',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.shade600,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+          );
+        });
+      } else {
+        Get.snackbar(
+          'Berhasil',
+          'Akun "${name.trim()}" berhasil dibuat!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.shade600,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      }
+      return true;
     } on FirebaseAuthException catch (e) {
+      debugPrint('FirebaseAuthException in createUser: ${e.code} - ${e.message}');
       String msg;
       switch (e.code) {
         case 'email-already-in-use':
@@ -508,23 +538,52 @@ class AdminController extends GetxController {
         default:
           msg = 'Terjadi kesalahan (${e.code}).';
       }
-      Get.snackbar(
-        'Error',
-        msg,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      if (GetPlatform.isWindows) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          Get.snackbar(
+            'Error',
+            msg,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade600,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+          );
+        });
+      } else {
+        Get.snackbar(
+          'Error',
+          msg,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      }
+      return false;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal membuat akun: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      debugPrint('Generic exception in createUser: $e');
+      if (GetPlatform.isWindows) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          Get.snackbar(
+            'Error',
+            'Gagal membuat akun: $e',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade600,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+          );
+        });
+      } else {
+        Get.snackbar(
+          'Error',
+          'Gagal membuat akun: $e',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      }
+      return false;
     } finally {
       isCreatingUser.value = false;
     }

@@ -11,17 +11,25 @@ class ScanQrPage extends StatefulWidget {
 }
 
 class _ScanQrPageState extends State<ScanQrPage> {
-  final MobileScannerController _cameraController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
-    facing: CameraFacing.back,
-  );
+  MobileScannerController? _cameraController;
 
   bool _isProcessing = false;
   bool _hasScanned = false;
 
   @override
+  void initState() {
+    super.initState();
+    if (GetPlatform.isAndroid || GetPlatform.isIOS) {
+      _cameraController = MobileScannerController(
+        detectionSpeed: DetectionSpeed.normal,
+        facing: CameraFacing.back,
+      );
+    }
+  }
+
+  @override
   void dispose() {
-    _cameraController.dispose();
+    _cameraController?.dispose();
     super.dispose();
   }
 
@@ -40,7 +48,7 @@ class _ScanQrPageState extends State<ScanQrPage> {
     });
 
     // Stop the camera
-    _cameraController.stop();
+    _cameraController?.stop();
 
     final absenceC = Get.find<AbsenceController>();
     final isClockIn = !absenceC.hasClockIn.value;
@@ -69,10 +77,26 @@ class _ScanQrPageState extends State<ScanQrPage> {
       body: Stack(
         children: [
           // Camera
-          MobileScanner(
-            controller: _cameraController,
-            onDetect: _onDetect,
-          ),
+          if (_cameraController != null)
+            MobileScanner(
+              controller: _cameraController!,
+              onDetect: _onDetect,
+            )
+          else
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  'Kamera tidak didukung di platform ini',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
 
           // Overlay
           Container(
