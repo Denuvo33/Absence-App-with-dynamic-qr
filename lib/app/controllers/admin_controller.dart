@@ -70,18 +70,20 @@ class AdminController extends GetxController {
 
   Future<void> loadAll() async {
     isLoading.value = true;
-    await Future.wait([
-      loadSchedule(),
-      loadAllUsers(),
-      loadTodayAttendance(),
-      loadTodayLogbooks(),
-      loadAllLeaveRequests(),
-      loadDivisions(),
-      loadAsalSuggestions(),
-      loadPublicHolidays(),
-    ]);
-    // Check if QR session is active
-    _listenQrSession();
+    try {
+      await loadSchedule();
+      await loadAllUsers();
+      await loadTodayAttendance();
+      await loadTodayLogbooks();
+      await loadAllLeaveRequests();
+      await loadDivisions();
+      await loadAsalSuggestions();
+      await loadPublicHolidays();
+      // Check if QR session is active
+      _listenQrSession();
+    } catch (e) {
+      debugPrint('Error in loadAll: $e');
+    }
     isLoading.value = false;
   }
 

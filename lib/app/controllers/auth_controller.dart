@@ -133,10 +133,16 @@ class AuthController extends GetxController {
       );
 
       _clearFields();
-      // Navigation handled by auth state listener → _loadUserDataAndNavigate
+      
+      // On Windows, the auth state listener might not fire or navigate reliably
+      if (GetPlatform.isWindows) {
+        await _loadUserDataAndNavigate();
+      }
     } on FirebaseAuthException catch (e) {
+      debugPrint('FirebaseAuthException during login: ${e.code} - ${e.message}');
       _showError(_getAuthErrorMessage(e.code));
     } catch (e) {
+      debugPrint('Generic exception during login: $e');
       _showError('Terjadi kesalahan. Silakan coba lagi.');
     } finally {
       isLoading.value = false;
@@ -146,6 +152,14 @@ class AuthController extends GetxController {
   // Logout
   Future<void> logout() async {
     await _auth.signOut();
+    if (GetPlatform.isWindows) {
+      userName.value = '';
+      userEmail.value = '';
+      userRole.value = '';
+      userDivisi.value = '';
+      Get.find<AbsenceController>().resetState();
+      Get.offAllNamed(AppRoutes.login);
+    }
   }
 
   // Clear text fields
@@ -156,14 +170,27 @@ class AuthController extends GetxController {
 
   // Show error snackbar
   void _showError(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red.shade600,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
+    if (GetPlatform.isWindows) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        Get.snackbar(
+          'Error',
+          message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      });
+    } else {
+      Get.snackbar(
+        'Error',
+        message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
   }
 
   // Map Firebase Auth error codes to user-friendly messages

@@ -135,12 +135,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         ),
                       ],
                     ),
-                    IconButton(
-                      onPressed: () => _showLogoutDialog(authC),
-                      icon: const Icon(
-                        Icons.logout_rounded,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: adminC.loadAll,
+                          icon: const Icon(
+                            Icons.refresh_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => _showLogoutDialog(authC),
+                          icon: const Icon(
+                            Icons.logout_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -589,13 +600,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              'QR Code Absensi',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'QR Code Absensi',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () async {
+                    await adminC.loadSchedule();
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -817,9 +839,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Pengajuan Izin / Cuti',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Pengajuan Izin / Cuti',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: adminC.loadAllLeaveRequests,
+                      icon: const Icon(Icons.refresh_rounded),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -1055,9 +1086,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Kelola User',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Kelola User',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  onPressed: () async {
+                    await adminC.loadAllUsers();
+                    await adminC.loadDivisions();
+                    await adminC.loadAsalSuggestions();
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -1658,9 +1702,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Pengaturan',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Pengaturan',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  onPressed: () async {
+                    await adminC.loadSchedule();
+                    await adminC.loadPublicHolidays();
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             Container(
