@@ -37,7 +37,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: Obx(() {
         if (adminC.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -48,7 +48,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF4A6CF7),
+        selectedItemColor: const Color(0xFF0F172A),
         unselectedItemColor: Colors.grey,
         selectedFontSize: 11,
         unselectedFontSize: 10,
@@ -101,11 +101,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF4A6CF7), Color(0xFF6C5CE7)],
-                  ),
+                  color: Color(0xFF0F172A), // Slate 900
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(30),
                     bottomRight: Radius.circular(30),
@@ -170,7 +166,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           title: 'Total Anak Magang',
                           value: '${adminC.totalUsers.value}',
                           icon: Icons.people_alt,
-                          color: const Color(0xFF4A6CF7),
+                          color: const Color(0xFF0F172A),
                           onTap: () => Get.toNamed('/admin/users'),
                         ),
                       ),
@@ -542,14 +538,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFE8EAF6),
+                                  color: const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   item['divisi'] ?? '-',
                                   style: const TextStyle(
                                     fontSize: 11,
-                                    color: Color(0xFF4A6CF7),
+                                    color: Color(0xFF0F172A),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -677,7 +673,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4A6CF7),
+                          backgroundColor: const Color(0xFF0F172A),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -752,7 +748,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           backgroundColor: Colors.white,
                           eyeStyle: const QrEyeStyle(
                             eyeShape: QrEyeShape.square,
-                            color: Color(0xFF4A6CF7),
+                            color: Color(0xFF0F172A),
                           ),
                           dataModuleStyle: const QrDataModuleStyle(
                             dataModuleShape: QrDataModuleShape.square,
@@ -859,7 +855,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4A6CF7),
+                    color: const Color(0xFF0F172A),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Obx(() {
@@ -1159,7 +1155,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4A6CF7),
+                          backgroundColor: const Color(0xFF0F172A),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1192,9 +1188,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           label: Text(div['name'] ?? ''),
                           deleteIcon: const Icon(Icons.close, size: 16),
                           onDeleted: () => adminC.deleteDivision(div['id']!),
-                          backgroundColor: const Color(0xFFE8EAF6),
+                          backgroundColor: const Color(0xFFF1F5F9),
                           labelStyle: const TextStyle(
-                            color: Color(0xFF4A6CF7),
+                            color: Color(0xFF0F172A),
                             fontWeight: FontWeight.w500,
                           ),
                         );
@@ -1403,7 +1399,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4A6CF7),
+                          backgroundColor: const Color(0xFF0F172A),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1476,14 +1472,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 children: [
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundColor: const Color(0xFFE8EAF6),
+                                    backgroundColor: const Color(0xFFF1F5F9),
                                     child: Text(
                                       (user['name'] as String).isNotEmpty
                                           ? user['name'][0].toUpperCase()
                                           : '?',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF4A6CF7),
+                                        color: Color(0xFF0F172A),
                                       ),
                                     ),
                                   ),
@@ -1521,7 +1517,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFE8EAF6),
+                                          color: const Color(0xFFF1F5F9),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
@@ -1530,7 +1526,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                           user['divisi'] ?? '-',
                                           style: const TextStyle(
                                             fontSize: 11,
-                                            color: Color(0xFF4A6CF7),
+                                            color: Color(0xFF0F172A),
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -1814,7 +1810,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4A6CF7),
+                        backgroundColor: const Color(0xFF0F172A),
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('Simpan Pengaturan'),
@@ -1847,7 +1843,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     children: [
                       Icon(
                         Icons.calendar_view_week_rounded,
-                        color: const Color(0xFF4A6CF7),
+                        color: const Color(0xFF0F172A),
                         size: 22,
                       ),
                       const SizedBox(width: 8),
@@ -2210,7 +2206,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       textConfirm: 'Simpan',
       textCancel: 'Batal',
       confirmTextColor: Colors.white,
-      buttonColor: const Color(0xFF4A6CF7),
+      buttonColor: const Color(0xFF0F172A),
       onConfirm: () {
         if (nameCtrl.text.trim().isEmpty) {
           Get.snackbar('Error', 'Nama tidak boleh kosong');

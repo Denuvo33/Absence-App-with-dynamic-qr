@@ -11,14 +11,14 @@ class AdminUsersPage extends StatelessWidget {
     final adminC = Get.find<AdminController>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         title: const Text(
           'Daftar Anak Magang',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF4A6CF7),
+        backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -82,20 +82,20 @@ class AdminUsersPage extends StatelessWidget {
                   ),
                   leading: const Icon(
                     Icons.location_city,
-                    color: Color(0xFF4A6CF7),
+                    color: Color(0xFF0F172A),
                   ),
                   children: groupUsers.map((user) {
                     return ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                       leading: CircleAvatar(
                         radius: 18,
-                        backgroundColor: const Color(0xFF4A6CF7).withValues(alpha: 0.1),
+                        backgroundColor: const Color(0xFF0F172A).withValues(alpha: 0.1),
                         child: Text(
                           user['name'].isNotEmpty ? user['name'][0].toUpperCase() : 'U',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF4A6CF7),
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                       ),

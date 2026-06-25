@@ -12,14 +12,14 @@ class HistoryPage extends StatelessWidget {
     absenceC.loadHistory();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         title: const Text(
           'Riwayat Absensi',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF4A6CF7),
+        backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -29,7 +29,7 @@ class HistoryPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF4A6CF7),
+              color: Color(0xFF0F172A),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(24),
                 bottomRight: Radius.circular(24),
@@ -244,21 +244,21 @@ class _HistoryCard extends StatelessWidget {
                 label: 'Masuk',
                 time: clockInStr,
                 icon: Icons.login_rounded,
-                color: isLate ? Colors.red.shade600 : const Color(0xFF4A6CF7),
+                color: isLate ? Colors.red.shade600 : const Color(0xFF0F172A),
               ),
               const SizedBox(width: 12),
               _TimeChip(
                 label: 'Pulang',
                 time: clockOutStr,
                 icon: Icons.logout_rounded,
-                color: const Color(0xFF6C5CE7),
+                color: const Color(0xFF475569),
               ),
               const SizedBox(width: 12),
               _TimeChip(
                 label: 'Durasi',
                 time: duration,
                 icon: Icons.timer_outlined,
-                color: const Color(0xFFF57C00),
+                color: const Color(0xFF0F172A),
               ),
             ],
           ),
@@ -269,7 +269,7 @@ class _HistoryCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.location_on, size: 14, color: Colors.blue.shade600),
+                  Icon(Icons.location_on, size: 14, color: const Color(0xFF64748B)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -284,7 +284,7 @@ class _HistoryCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.location_on, size: 14, color: Colors.purple.shade600),
+                  Icon(Icons.location_on, size: 14, color: const Color(0xFF64748B)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(

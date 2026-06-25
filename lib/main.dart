@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       title: 'Absence',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF4A6CF7),
+        colorSchemeSeed: const Color(0xFF0F172A),
         useMaterial3: true,
         fontFamily: 'Roboto',
       ),

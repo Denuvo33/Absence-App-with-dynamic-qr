@@ -35,14 +35,14 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         title: const Text(
           'Detail Anak Magang',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF4A6CF7),
+        backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -121,7 +121,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundColor: const Color(0xFF4A6CF7).withValues(alpha: 0.1),
+                      backgroundColor: const Color(0xFF0F172A).withValues(alpha: 0.1),
                       child: Text(
                         user['name'] != null && user['name'].toString().isNotEmpty
                             ? user['name'].toString()[0].toUpperCase()
@@ -129,7 +129,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF4A6CF7),
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                     ),
@@ -158,9 +158,9 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                       children: [
                         Chip(
                           label: Text('Divisi: ${user['divisi']}'),
-                          backgroundColor: const Color(0xFFE8EAF6),
+                          backgroundColor: const Color(0xFFF1F5F9),
                           labelStyle: const TextStyle(
-                            color: Color(0xFF4A6CF7),
+                            color: Color(0xFF0F172A),
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -200,7 +200,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                           icon: const Icon(Icons.edit, size: 16),
                           label: const Text('Edit Profil'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4A6CF7),
+                            backgroundColor: const Color(0xFF0F172A),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             shape: RoundedRectangleBorder(
@@ -363,7 +363,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                         _PointColumn(
                           title: 'Poin Logbook',
                           points: adminC.totalPointsLogbook,
-                          color: const Color(0xFF4A6CF7),
+                          color: const Color(0xFF0F172A),
                         ),
                         Container(width: 1, height: 40, color: Colors.grey.shade200),
                         _PointColumn(
@@ -386,7 +386,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4A6CF7),
+                  color: const Color(0xFF0F172A),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Obx(() {
@@ -437,7 +437,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                           border: Border(
                             bottom: BorderSide(
                               color: _currentTab == 'absensi'
-                                  ? const Color(0xFF4A6CF7)
+                                  ? const Color(0xFF0F172A)
                                   : Colors.transparent,
                               width: 3,
                             ),
@@ -450,7 +450,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                             color: _currentTab == 'absensi'
-                                ? const Color(0xFF4A6CF7)
+                                ? const Color(0xFF0F172A)
                                 : Colors.grey,
                           ),
                         ),
@@ -466,7 +466,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                           border: Border(
                             bottom: BorderSide(
                               color: _currentTab == 'logbook'
-                                  ? const Color(0xFF4A6CF7)
+                                  ? const Color(0xFF0F172A)
                                   : Colors.transparent,
                               width: 3,
                             ),
@@ -479,7 +479,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                             color: _currentTab == 'logbook'
-                                ? const Color(0xFF4A6CF7)
+                                ? const Color(0xFF0F172A)
                                 : Colors.grey,
                           ),
                         ),
@@ -907,14 +907,14 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8EAF6),
+                      color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       item['divisi'] ?? '-',
                       style: const TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF4A6CF7),
+                        color: Color(0xFF0F172A),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1009,7 +1009,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
       textConfirm: 'Simpan',
       textCancel: 'Batal',
       confirmTextColor: Colors.white,
-      buttonColor: const Color(0xFF4A6CF7),
+      buttonColor: const Color(0xFF0F172A),
       onConfirm: () {
         if (nameCtrl.text.trim().isEmpty) {
           Get.snackbar('Error', 'Nama tidak boleh kosong');
@@ -1114,7 +1114,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
       textConfirm: 'Simpan',
       textCancel: 'Batal',
       confirmTextColor: Colors.white,
-      buttonColor: const Color(0xFF4A6CF7),
+      buttonColor: const Color(0xFF0F172A),
       onConfirm: () {
         final pts = int.tryParse(pointsCtrl.text.trim()) ?? 0;
         Get.back();

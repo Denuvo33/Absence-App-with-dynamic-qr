@@ -12,14 +12,14 @@ class LeavePage extends StatelessWidget {
     leaveC.loadLeaveRequests();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         title: const Text(
           'Pengajuan Izin/Cuti',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFFEF6C00),
+        backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -31,7 +31,7 @@ class LeavePage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
-                color: Color(0xFFEF6C00),
+                color: Color(0xFF0F172A),
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
@@ -84,21 +84,21 @@ class LeavePage extends StatelessWidget {
                               label: 'Izin',
                               isSelected: leaveC.selectedType.value == 'izin',
                               onTap: () => leaveC.selectedType.value = 'izin',
-                              color: const Color(0xFF4A6CF7),
+                              color: const Color(0xFF0F172A),
                             ),
                             const SizedBox(width: 8),
                             _TypeChip(
                               label: 'Cuti',
                               isSelected: leaveC.selectedType.value == 'cuti',
                               onTap: () => leaveC.selectedType.value = 'cuti',
-                              color: const Color(0xFF00897B),
+                              color: const Color(0xFF0F172A),
                             ),
                             const SizedBox(width: 8),
                             _TypeChip(
                               label: 'Sakit',
                               isSelected: leaveC.selectedType.value == 'sakit',
                               onTap: () => leaveC.selectedType.value = 'sakit',
-                              color: Colors.red.shade600,
+                              color: const Color(0xFF0F172A),
                             ),
                           ],
                         )),
@@ -145,10 +145,18 @@ class LeavePage extends StatelessWidget {
                         hintText: 'Tulis alasan pengajuan...',
                         hintStyle: TextStyle(color: Colors.grey.shade400),
                         filled: true,
-                        fillColor: const Color(0xFFF5F7FA),
+                        fillColor: const Color(0xFFF8FAFC), // Slate 50
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
                         ),
                         contentPadding: const EdgeInsets.all(16),
                       ),
@@ -159,18 +167,18 @@ class LeavePage extends StatelessWidget {
                     // Submit button
                     Obx(() => SizedBox(
                           width: double.infinity,
-                          height: 50,
+                          height: 54,
                           child: ElevatedButton(
                             onPressed: leaveC.isLoading.value
                                 ? null
                                 : leaveC.submitLeave,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFEF6C00),
+                              backgroundColor: const Color(0xFF0F172A),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              elevation: 2,
+                              elevation: 0,
                             ),
                             child: leaveC.isLoading.value
                                 ? const SizedBox(
@@ -372,8 +380,9 @@ class _DateField extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F7FA),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
             ),
             child: Row(
               children: [
@@ -432,7 +441,7 @@ class _LeaveCard extends StatelessWidget {
     String typeLabel;
     switch (type) {
       case 'cuti':
-        typeColor = const Color(0xFF00897B);
+        typeColor = const Color(0xFF0F172A);
         typeIcon = Icons.beach_access;
         typeLabel = 'Cuti';
       case 'sakit':
@@ -440,7 +449,7 @@ class _LeaveCard extends StatelessWidget {
         typeIcon = Icons.local_hospital;
         typeLabel = 'Sakit';
       default:
-        typeColor = const Color(0xFF4A6CF7);
+        typeColor = const Color(0xFF475569);
         typeIcon = Icons.event_note;
         typeLabel = 'Izin';
     }

@@ -15,14 +15,14 @@ class DashboardPage extends StatelessWidget {
     leaveC.loadLeaveRequests();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         title: const Text(
           'Dashboard',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF00897B),
+        backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -32,7 +32,7 @@ class DashboardPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF00897B),
+              color: Color(0xFF0F172A),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(24),
                 bottomRight: Radius.circular(24),
@@ -148,7 +148,7 @@ class DashboardPage extends StatelessWidget {
                             value: '$totalHadir',
                             subtitle: 'hari',
                             icon: Icons.calendar_month,
-                            color: const Color(0xFF4A6CF7),
+                            color: const Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -158,7 +158,7 @@ class DashboardPage extends StatelessWidget {
                             value: '$totalIzinDays',
                             subtitle: 'hari',
                             icon: Icons.event_note_rounded,
-                            color: const Color(0xFFEF6C00),
+                            color: const Color(0xFF475569),
                           ),
                         ),
                       ],
@@ -207,7 +207,7 @@ class DashboardPage extends StatelessWidget {
                           value: workDayCount > 0
                               ? '${avgHours}j ${avgMins}m'
                               : '-',
-                          color: const Color(0xFFF57C00),
+                          color: const Color(0xFF0F172A),
                         ),
                         _DetailItem(
                           icon: Icons.percent,
@@ -215,7 +215,7 @@ class DashboardPage extends StatelessWidget {
                           value: totalExpected > 0
                               ? '${attendanceRate.toStringAsFixed(0)}%'
                               : '-',
-                          color: const Color(0xFF00897B),
+                          color: const Color(0xFF475569),
                         ),
                         _DetailItem(
                           icon: Icons.schedule,
@@ -223,7 +223,7 @@ class DashboardPage extends StatelessWidget {
                           value: totalHadir > 0
                               ? '${punctualityRate.toStringAsFixed(0)}%'
                               : '-',
-                          color: const Color(0xFF4A6CF7),
+                          color: const Color(0xFF0F172A),
                         ),
                       ],
                     ),

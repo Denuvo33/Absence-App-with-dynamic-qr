@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: _currentIndex == 0 ? _buildHomeTab() : _buildLogbookTab(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
             Get.find<AbsenceController>().loadLogbook();
           }
         },
-        selectedItemColor: const Color(0xFF4A6CF7),
+        selectedItemColor: const Color(0xFF0F172A),
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
@@ -65,7 +65,7 @@ class _HomePageState extends State<HomePage> {
     ).format(DateTime.now());
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: RefreshIndicator(
         onRefresh: () async {
           await absenceC.loadSchedule();
@@ -80,11 +80,7 @@ class _HomePageState extends State<HomePage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF4A6CF7), Color(0xFF6C5CE7)],
-                    ),
+                    color: Color(0xFF0F172A), // Slate 900
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(30),
                       bottomRight: Radius.circular(30),
@@ -215,7 +211,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             icon: Icons.login_rounded,
                             isDone: absenceC.hasClockIn.value,
-                            color: const Color(0xFF4A6CF7),
+                            color: const Color(0xFF0F172A), // Slate 900
                             badge: absenceC.isLate.value
                                 ? 'Telat ${absenceC.lateMinutes.value}m'
                                 : null,
@@ -231,7 +227,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             icon: Icons.logout_rounded,
                             isDone: absenceC.hasClockOut.value,
-                            color: const Color(0xFF6C5CE7),
+                            color: const Color(0xFF475569), // Slate 600
                           ),
                         ),
                       ],
@@ -264,12 +260,12 @@ class _HomePageState extends State<HomePage> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE8EAF6),
+                              color: const Color(0xFFF1F5F9), // Slate 100
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
                               Icons.timer_outlined,
-                              color: Color(0xFF4A6CF7),
+                              color: Color(0xFF0F172A), // Slate 900
                               size: 24,
                             ),
                           ),
@@ -290,7 +286,7 @@ class _HomePageState extends State<HomePage> {
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF4A6CF7),
+                                  color: Color(0xFF0F172A), // Slate 900
                                 ),
                               ),
                             ],
@@ -335,7 +331,7 @@ class _HomePageState extends State<HomePage> {
                                 Icon(
                                   Icons.location_on,
                                   size: 16,
-                                  color: Colors.blue.shade400,
+                                  color: const Color(0xFF64748B), // Slate 500
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -361,7 +357,7 @@ class _HomePageState extends State<HomePage> {
                                 Icon(
                                   Icons.location_on,
                                   size: 16,
-                                  color: Colors.purple.shade400,
+                                  color: const Color(0xFF64748B), // Slate 500
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -527,14 +523,14 @@ class _HomePageState extends State<HomePage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: canAction
                                   ? (hasIn
-                                        ? const Color(0xFF6C5CE7)
-                                        : const Color(0xFF4A6CF7))
+                                        ? const Color(0xFF475569)
+                                        : const Color(0xFF0F172A))
                                   : Colors.grey.shade400,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              elevation: canAction ? 3 : 0,
+                              elevation: 0,
                             ),
                           ),
                         ),
@@ -565,8 +561,8 @@ class _HomePageState extends State<HomePage> {
                         title: 'Riwayat Absensi',
                         subtitle: 'Lihat histori kehadiran',
                         icon: Icons.history,
-                        color: const Color(0xFF00897B),
-                        bgColor: const Color(0xFFE0F2F1),
+                        color: const Color(0xFF1E293B),
+                        bgColor: const Color(0xFFF1F5F9),
                         onTap: () => Get.toNamed(AppRoutes.history),
                       ),
                       const SizedBox(height: 16),
@@ -574,8 +570,8 @@ class _HomePageState extends State<HomePage> {
                         title: 'Pengajuan Izin / Cuti',
                         subtitle: 'Buat pengajuan baru',
                         icon: Icons.event_note,
-                        color: const Color(0xFFFB8C00),
-                        bgColor: const Color(0xFFFFF3E0),
+                        color: const Color(0xFF1E293B),
+                        bgColor: const Color(0xFFF1F5F9),
                         onTap: () => Get.toNamed(AppRoutes.leave),
                       ),
                       const SizedBox(height: 16),
@@ -583,8 +579,8 @@ class _HomePageState extends State<HomePage> {
                         title: 'Dashboard',
                         subtitle: 'Lihat statistik kehadiranmu',
                         icon: Icons.bar_chart,
-                        color: const Color(0xFF6C5CE7),
-                        bgColor: const Color(0xFFEDE7F6),
+                        color: const Color(0xFF1E293B),
+                        bgColor: const Color(0xFFF1F5F9),
                         onTap: () => Get.toNamed(AppRoutes.dashboard),
                       ),
                     ],
@@ -617,11 +613,7 @@ class _HomePageState extends State<HomePage> {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4A6CF7), Color(0xFF6C5CE7)],
-              ),
+              color: Color(0xFF0F172A), // Slate 900
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
@@ -670,8 +662,20 @@ class _HomePageState extends State<HomePage> {
                   maxLines: 4,
                   decoration: InputDecoration(
                     hintText: 'Tulis aktivitas / logbook kamu hari ini...',
+                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC), // Slate 50
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
                     ),
                     contentPadding: const EdgeInsets.all(16),
                   ),
@@ -740,10 +744,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4A6CF7),
+                        backgroundColor: const Color(0xFF0F172A), // Slate 900
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                     ),
@@ -828,14 +832,14 @@ class _HomePageState extends State<HomePage> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFE8EAF6),
+                                  color: const Color(0xFFF1F5F9), // Slate 100
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   item['divisi'] ?? '-',
                                   style: const TextStyle(
                                     fontSize: 11,
-                                    color: Color(0xFF4A6CF7),
+                                    color: Color(0xFF475569), // Slate 600
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -958,7 +962,7 @@ class _HomePageState extends State<HomePage> {
       textCancel: 'Batal',
       textConfirm: 'Keluar',
       confirmTextColor: Colors.white,
-      buttonColor: const Color(0xFF4A6CF7),
+      buttonColor: const Color(0xFF0F172A),
       onConfirm: () {
         Get.back();
         authC.logout();
@@ -986,7 +990,7 @@ class _HomePageState extends State<HomePage> {
       textCancel: 'Batal',
       textConfirm: 'Simpan',
       confirmTextColor: Colors.white,
-      buttonColor: const Color(0xFF4A6CF7),
+      buttonColor: const Color(0xFF0F172A),
       onConfirm: () {
         Get.back();
         absenceC.updateLogbook(id, editCtrl.text);

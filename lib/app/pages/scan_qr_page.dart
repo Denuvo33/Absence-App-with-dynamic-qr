@@ -112,7 +112,7 @@ class _ScanQrPageState extends State<ScanQrPage> {
               height: 280,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: const Color(0xFF4A6CF7),
+                  color: const Color(0xFF0F172A),
                   width: 3,
                 ),
                 borderRadius: BorderRadius.circular(20),
@@ -149,7 +149,7 @@ class _ScanQrPageState extends State<ScanQrPage> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4A6CF7).withValues(alpha: 0.9),
+                          color: const Color(0xFF0F172A).withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(

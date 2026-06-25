@@ -20,9 +20,9 @@ class AbsenceController extends GetxController {
   final clockOutLocationStr = ''.obs;
 
   // Schedule from Firebase /absence
-  final scheduleClockIn = ''.obs; // e.g. "07:00"
-  final scheduleClockOut = ''.obs; // e.g. "16:00"
-  final tolerance = 0.obs; // in minutes
+  final scheduleClockIn = ''.obs;
+  final scheduleClockOut = ''.obs;
+  final tolerance = 0.obs;
   final isScheduleLoaded = false.obs;
   final defaultPoints = 60.obs;
   final defaultLogbookPoints = 60.obs;
@@ -35,7 +35,6 @@ class AbsenceController extends GetxController {
   String get _uid => _auth.currentUser?.uid ?? '';
   String get _todayKey => DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-  // Path helper — attendance now lives under users/{uid}/attendance
   DatabaseReference get _attendanceRef =>
       _db.child('users').child(_uid).child('attendance');
 
@@ -64,7 +63,7 @@ class AbsenceController extends GetxController {
     isLoading.value = false;
   }
 
-  // ─── Location Helpers ────────────────────────────────────────
+  // ─── Location Helpers
 
   Future<String?> _getLocationAndAddress() async {
     try {
@@ -93,7 +92,7 @@ class AbsenceController extends GetxController {
             backgroundColor: Colors.red.shade600,
             colorText: Colors.white,
           );
-          return null; // Ditolak
+          return null;
         }
       }
 
@@ -188,7 +187,7 @@ class AbsenceController extends GetxController {
     }
   }
 
-  // Parse "HH:mm" string to DateTime today (null-safe)
+  // Parse "HH:mm" string to DateTime today
   DateTime? _parseScheduleTime(String timeStr) {
     if (timeStr.isEmpty || !timeStr.contains(':')) return null;
     try {
@@ -251,7 +250,7 @@ class AbsenceController extends GetxController {
     return '';
   }
 
-  // ─── Load Today ────────────────────────────────────────────
+  // ─── Load Today
 
   Future<void> loadTodayAttendance() async {
     if (_uid.isEmpty) return;
@@ -310,7 +309,7 @@ class AbsenceController extends GetxController {
     }
   }
 
-  // ─── QR-Based Clock In ─────────────────────────────────────
+  // ─── QR-Based Clock In
 
   Future<void> clockInWithQr(String scannedCode) async {
     if (_uid.isEmpty || hasClockIn.value) return;
@@ -400,12 +399,14 @@ class AbsenceController extends GetxController {
       await _regenerateQrCode();
 
       final lateStr = late > 0 ? ' (Telat $late menit)' : '';
+      Get.back();
       Get.snackbar(
         'Clock In Berhasil',
         'Absen masuk pukul ${DateFormat("HH:mm").format(now)}$lateStr\nPoin: $points',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor:
-            late > 0 ? Colors.orange.shade600 : Colors.green.shade600,
+        backgroundColor: late > 0
+            ? Colors.orange.shade600
+            : Colors.green.shade600,
         colorText: Colors.white,
         margin: const EdgeInsets.all(16),
       );
@@ -416,7 +417,7 @@ class AbsenceController extends GetxController {
     }
   }
 
-  // ─── QR-Based Clock Out ────────────────────────────────────
+  // ─── QR-Based Clock Out
 
   Future<void> clockOutWithQr(String scannedCode) async {
     if (_uid.isEmpty || !hasClockIn.value || hasClockOut.value) return;
@@ -481,6 +482,8 @@ class AbsenceController extends GetxController {
 
       // Regenerate QR code after successful scan
       await _regenerateQrCode();
+
+      Get.back();
 
       Get.snackbar(
         'Clock Out Berhasil',
@@ -669,7 +672,9 @@ class AbsenceController extends GetxController {
       });
 
       // Sort by newest first
-      list.sort((a, b) => (b['createdAt'] as int).compareTo(a['createdAt'] as int));
+      list.sort(
+        (a, b) => (b['createdAt'] as int).compareTo(a['createdAt'] as int),
+      );
 
       logbookList.assignAll(list);
     } catch (e) {
